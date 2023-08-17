@@ -1,33 +1,58 @@
-import { Injectable } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, ParseUUIDPipe } from '@nestjs/common';
 import { CreateRepositorioDto } from './dto/create-repositorio.dto';
 import { UpdateRepositorioDto } from './dto/update-repositorio.dto';
 import { Usuario } from 'src/auth/entities';
 import { Repositorio } from './entities/repositorio.entity';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class RepositoriosService {
 
+  private readonly logger = new Logger('RepositoriosService');
+
   constructor(
     @InjectRepository(Repositorio)
-    private readonly repositorioRepository: Repository<Repositorio>    
+    private readonly repositorioRepository: Repository<Repositorio>,
+    private readonly dataSource:DataSource
   ) {
 
   }
 
-  async create(createRepositorioDto: CreateRepositorioDto,usuario:Usuario,urls?:string[]) {
-    
-    const repositorios = await Promise.all(urls.map(async (url)=>{
-      return await this.repositorioRepository.save({
-        ...createRepositorioDto,
-        url,
-        usuario,
-      });
-    }));
+  async create(createRepositorioDto: CreateRepositorioDto, usuario: Usuario, urls?: string[]) {
 
-    return repositorios;
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try
+    {
+      const repositorios = await Promise.all(urls.map(async r => {
+        const registro = await queryRunner.manager.save(Repositorio,{
+          ...createRepositorioDto,
+          nombrea: r['nombre'],
+          url: r['url'],
+          usuario,
+        })
+        return { ...registro, usuario: registro.usuario.nombreCompleto };
+      }));
+        
+      await queryRunner.commitTransaction();
+
+      await queryRunner.release();
+
+      return repositorios;
+      
+    } catch (error) {
+
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      this.handleDBExceptions(error);
+    }
+
+    
 
 
   }
@@ -40,9 +65,9 @@ export class RepositoriosService {
         activo: true,
       },
       take: limit,
-      skip: page*limit,
-      relations:{
-        usuario:true,        
+      skip: page * limit,
+      relations: {
+        usuario: true,
       },
       order: {
         nombre: 'ASC',
@@ -53,21 +78,73 @@ export class RepositoriosService {
       total,
       page,
       limit,
-      rowsTotal:rows.length,
+      rowsTotal: rows.length,
       rows
     }
 
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} repositorio`;
+  async findOne(id:string) {
+    return await this.repositorioRepository.findOne({
+      where: { id: id },
+      relations: ['usuario'],
+    });
   }
 
-  update(id: number, updateRepositorioDto: UpdateRepositorioDto) {
-    return `This action updates a #${id} repositorio`;
+  async update(id: string, updateRepositorioDto: UpdateRepositorioDto) {
+
+    const repositorio = await this.repositorioRepository.preload({id,...updateRepositorioDto});
+    
+    if ( !repositorio ){
+      throw new NotFoundException(`No existe el repositorio id: ${ id }`);
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+
+      await queryRunner.manager.save(repositorio);
+      
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+
+      return repositorio;
+      
+    } catch (error) {
+
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      this.handleDBExceptions(error);
+    }    
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} repositorio`;
+  async remove(id: string) {
+    const repositorio = await this.repositorioRepository.findOneBy({ id });
+
+    if (!repositorio) {
+      throw new NotFoundException(`El repositorio  no existe "${id}"`);
+    }
+
+    repositorio.activo = false;
+    
+    return await this.repositorioRepository.save(repositorio);
+
   }
+
+  private handleDBExceptions(error: any) {
+
+    console.log(error.code);
+    
+    if (error.code === '23502')
+      throw new BadRequestException(error.detail);
+
+    this.logger.error(error)
+    // console.log(error)
+    throw new InternalServerErrorException('Unexpected error, check server logs');
+
+  }
+
 }

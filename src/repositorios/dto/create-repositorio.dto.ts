@@ -1,12 +1,12 @@
-import { IsIn, IsString, MinLength } from "class-validator";
+import { IsBoolean, IsIn, IsOptional, IsString, MinLength } from "class-validator";
 
 export class CreateRepositorioDto {
 
-    @IsString()
-    @MinLength(1)
-    nombre: string;
-
     @IsIn(['Usuario'])
     repositorio: string;
+
+    @IsOptional()
+    @IsBoolean()
+    activo: boolean;
     
 }

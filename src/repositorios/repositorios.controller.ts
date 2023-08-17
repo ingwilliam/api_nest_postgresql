@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query, ParseUUIDPipe } from '@nestjs/common';
 import { RepositoriosService } from './repositorios.service';
 import { CreateRepositorioDto } from './dto/create-repositorio.dto';
 import { UpdateRepositorioDto } from './dto/update-repositorio.dto';
@@ -50,17 +50,22 @@ export class RepositoriosController {
   }
 
   @Get(':id')
-  findOne(@Param('id') id: string) {
-    return this.repositoriosService.findOne(+id);
+  @Auth()
+  findOne(@Param('id', ParseUUIDPipe) id:string) {
+    return this.repositoriosService.findOne(id);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateRepositorioDto: UpdateRepositorioDto) {
-    return this.repositoriosService.update(+id, updateRepositorioDto);
+  @Auth()
+  update(
+    @Param('id', ParseUUIDPipe) id: string, @Body() updateRepositorioDto: UpdateRepositorioDto
+    ) {      
+    return this.repositoriosService.update(id, updateRepositorioDto);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.repositoriosService.remove(+id);
+  @Auth()
+  remove(@Param('id', ParseUUIDPipe) id: string) {
+    return this.repositoriosService.remove(id);
   }
 }

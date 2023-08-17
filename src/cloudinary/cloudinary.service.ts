@@ -14,11 +14,14 @@ export class CloudinaryService {
 
   }
 
-  async upload(files:Express.Multer.File[]):Promise<string[]>{
+  async upload(files:Express.Multer.File[]):Promise<any[]>{
     const urls = await Promise.all(
       files.map(async (file) => {
         const url = await cloudinary.uploader.upload(file.path);
-        return url.url;
+        return {
+            url:url.url,
+            nombre:file.originalname
+          };
       }),
     );
 
