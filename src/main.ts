@@ -1,8 +1,10 @@
 import { NestFactory } from '@nestjs/core';
-import { AppModule } from './app.module';
 import { Logger, ValidationPipe, VersioningType } from '@nestjs/common';
-import { EnvConfiguration } from './config/app.config';
-import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
+import { SwaggerModule } from '@nestjs/swagger';
+
+import { AppModule } from './app.module';
+import { EnvConfiguration,ConfigDocumentBuilder } from './config/app.config';
+
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
@@ -22,24 +24,8 @@ async function bootstrap() {
     })
   );
 
-  const config = new DocumentBuilder()
-    .setTitle('Teslo RESTFull API')
-    .setDescription('Teslo shop endpoints')
-    .setVersion('1.0')
-    .addBearerAuth(
-      {
-        type: 'http',
-        scheme: 'bearer',
-        bearerFormat: 'JWT',
-        name: 'JWT',
-        description: 'Enter JWT token',
-        in: 'header',
-      },
-      'JWT-auth',)  
-    .build();
+  const document = SwaggerModule.createDocument(app, ConfigDocumentBuilder);
 
-  const document = SwaggerModule.createDocument(app, config);
-  
   SwaggerModule.setup('api', app, document);
 
   await app.listen(EnvConfiguration().port);

@@ -1,3 +1,4 @@
+import { DocumentBuilder } from "@nestjs/swagger";
 import { TypeOrmModuleOptions } from "@nestjs/typeorm"
 
 export const EnvConfiguration = () => ({
@@ -25,3 +26,19 @@ export const ConexionDB = (): TypeOrmModuleOptions => (
         synchronize: true
     }
 );
+
+export const ConfigDocumentBuilder = new DocumentBuilder()
+    .setTitle('Teslo RESTFull API')
+    .setDescription('Teslo shop endpoints')
+    .setVersion('1.0')
+    .addBearerAuth(
+      {
+        type: 'http',
+        scheme: 'bearer',
+        bearerFormat: 'JWT',
+        name: 'JWT',
+        description: 'Enter JWT token',
+        in: 'header',
+      },
+      'JWT-auth',)  
+    .build();
