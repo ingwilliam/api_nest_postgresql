@@ -1,4 +1,4 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UsuarioRol} from "./usuariorol.entity";
 import { Repositorio } from '../../repositorios/entities/repositorio.entity';
 
@@ -26,6 +26,12 @@ export class Usuario {
         default:true
     })
     activo:boolean;
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
 
     @OneToMany(
         ()=>UsuarioRol,

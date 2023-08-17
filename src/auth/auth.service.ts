@@ -14,7 +14,7 @@ export class AuthService {
 
   constructor(
     @InjectRepository(Usuario)
-    private readonly userRepository: Repository<Usuario>,
+    private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(UsuarioRol)
     private readonly usuarioRolRepository: Repository<UsuarioRol>,
     @InjectRepository(Rol)
@@ -33,13 +33,13 @@ export class AuthService {
 
       const {password,...userData} = RegistroUsuarioDto;
       
-      const user = this.userRepository.create({
+      const user = this.usuarioRepository.create({
         ...userData,
         password:bcrypt.hashSync(password,10),
         usuarioRoles: [this.usuarioRolRepository.create({rol:rol})],
       });
 
-      await this.userRepository.save(user);
+      await this.usuarioRepository.save(user);
 
       delete user.password;
 
@@ -69,7 +69,7 @@ export class AuthService {
 
     const {password,email} = loginUserDto;
 
-    const user = await this.userRepository.findOne({
+    const user = await this.usuarioRepository.findOne({
       where: {email},
       select: {email:true,password:true,id:true},
       relations: ['usuarioRoles', 'usuarioRoles.rol']

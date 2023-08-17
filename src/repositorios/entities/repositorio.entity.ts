@@ -1,41 +1,47 @@
 import { Usuario } from "../../usuarios/entities";
-import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
+import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity('repositorios')
 export class Repositorio {
 
     @PrimaryGeneratedColumn('uuid')
-    id:string;
+    id: string;
 
     @Column('text')
-    nombre:string;
+    nombre: string;
 
     @Column('text')
-    repositorio:string;
+    repositorio: string;
 
     @Column('text')
-    url:string;
+    url: string;
 
-    @Column('boolean',{
-        default:true
+    @Column('boolean', {
+        default: true
     })
-    activo:boolean;
+    activo: boolean;
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
 
     @ManyToOne(
-        ()=>Usuario,
+        () => Usuario,
         (usuario) => usuario.repositorios,
-        {onDelete:"CASCADE",nullable: false}
+        { onDelete: "CASCADE", nullable: false }
     )
-    usuario:Usuario
-    
+    usuario: Usuario
+
     @BeforeInsert()
-    checkFieldsBeforeInsert(){
-        
+    checkFieldsBeforeInsert() {
+
     }
 
     @BeforeUpdate()
-    checkFieldsBeforeUpdate(){
-        
+    checkFieldsBeforeUpdate() {
+
     }
 
 }

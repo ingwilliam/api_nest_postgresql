@@ -1,4 +1,4 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
+import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { Usuario } from "./usuario.entity";
 import { Rol } from "./rol.entity";
 
@@ -21,6 +21,12 @@ export class UsuarioRol {
         {onDelete:"CASCADE"}
     )
     rol:Rol
+
+    @CreateDateColumn()
+    createdAt: Date;
+
+    @UpdateDateColumn()
+    updatedAt: Date;
 
     @BeforeInsert()
     checkFieldsBeforeInsert(){
