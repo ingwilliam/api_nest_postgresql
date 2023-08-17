@@ -36,14 +36,14 @@ export class Usuario {
     @OneToMany(
         ()=>UsuarioRol,
         (usuarioRol)=>usuarioRol.usuario, 
-        {cascade:true,eager:true}       
+        {cascade:true}       
     )
     usuarioRoles: UsuarioRol[]
 
     @OneToMany(
         ()=>Repositorio,
         (repositorio)=>repositorio.usuario, 
-        {cascade:true,eager:true}       
+        {cascade:true}       
     )
     repositorios: Repositorio[]
 

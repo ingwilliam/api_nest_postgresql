@@ -5,6 +5,7 @@ import { Usuario } from 'src/auth/entities';
 import { Repositorio } from './entities/repositorio.entity';
 import { Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class RepositoriosService {
@@ -31,8 +32,31 @@ export class RepositoriosService {
 
   }
 
-  findAll() {
-    return `This action returns all repositorios`;
+  async findAll(paginationDto: PaginationDto) {
+    const { limit = 10, page = 0 } = paginationDto;
+
+    const [rows, total] = await this.repositorioRepository.findAndCount({
+      where: {
+        activo: true,
+      },
+      take: limit,
+      skip: page*limit,
+      relations:{
+        usuario:true,        
+      },
+      order: {
+        nombre: 'ASC',
+      }
+    });
+
+    return {
+      total,
+      page,
+      limit,
+      rowsTotal:rows.length,
+      rows
+    }
+
   }
 
   findOne(id: number) {

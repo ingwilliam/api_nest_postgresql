@@ -19,7 +19,7 @@ export class UsuarioRol {
     @ManyToOne(
         ()=>Rol,
         (rol) => rol.rolUsuarios,
-        {onDelete:"CASCADE"}
+        {onDelete:"CASCADE",eager:true}
     )
     rol:Rol
 

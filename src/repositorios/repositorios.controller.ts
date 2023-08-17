@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query } from '@nestjs/common';
 import { RepositoriosService } from './repositorios.service';
 import { CreateRepositorioDto } from './dto/create-repositorio.dto';
 import { UpdateRepositorioDto } from './dto/update-repositorio.dto';
@@ -7,6 +7,7 @@ import { ValidRoles } from 'src/auth/interfaces';
 import { CargarArchivos, PathArchivos } from 'src/common/decorators/cargar-archivos-interceptor.decorator';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
 import { Usuario } from 'src/auth/entities';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Controller('repositorios')
 export class RepositoriosController {
@@ -41,8 +42,11 @@ export class RepositoriosController {
   }
 
   @Get()
-  findAll() {
-    return this.repositoriosService.findAll();
+  @Auth()
+  findAll(
+    @Query() paginationDto:PaginationDto
+  ) {    
+    return this.repositoriosService.findAll(paginationDto);
   }
 
   @Get(':id')
