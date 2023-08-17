@@ -2,7 +2,7 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query
 import { RepositoriosService } from './repositorios.service';
 import { CreateRepositorioDto } from './dto/create-repositorio.dto';
 import { UpdateRepositorioDto } from './dto/update-repositorio.dto';
-import { Auth, GetUser } from '../auth/decorators';
+import { Auth, GetUsuario } from '../auth/decorators';
 import { ValidRoles } from '../auth/interfaces';
 import { CargarArchivos, PathArchivos } from '../common/decorators/cargar-archivos-interceptor.decorator';
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
@@ -23,7 +23,7 @@ export class RepositoriosController {
   create(
     @Body() createRepositorioDto: CreateRepositorioDto,
     @UploadedFiles() files,
-    @GetUser() usuario: Usuario,
+    @GetUsuario() usuario: Usuario,
     @PathArchivos() urls
   ) {
     return this.repositoriosService.create(createRepositorioDto, usuario, urls);
@@ -35,7 +35,7 @@ export class RepositoriosController {
   async createCloudinary(
     @Body() createRepositorioDto: CreateRepositorioDto,
     @UploadedFiles() files,
-    @GetUser() usuario: Usuario,    
+    @GetUsuario() usuario: Usuario,    
   ) {
     const urls = await this.cloudinaryService.upload(files);
     return this.repositoriosService.create(createRepositorioDto, usuario, urls);

@@ -5,7 +5,7 @@ import { Usuario } from '../../../usuarios/entities';
 import { META_ROLES } from '../../decorators/role-protected.decorator';
 
 @Injectable()
-export class UserRoleGuard implements CanActivate {
+export class UsuarioRolGuard implements CanActivate {
 
   constructor(
     private readonly reflector:Reflector

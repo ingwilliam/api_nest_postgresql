@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException, Logger, 
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt'
-import { LoginUserDto,CreateUserDto } from './dto/';
+import { LoginUsuarioDto,RegistroUsuarioDto } from './dto/';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtService } from '@nestjs/jwt';
 import { Rol, UsuarioRol ,Usuario } from '../usuarios/entities';
@@ -25,13 +25,13 @@ export class AuthService {
 
   }
 
-  async create(CreateUserDto: CreateUserDto) {
+  async create(RegistroUsuarioDto: RegistroUsuarioDto) {
 
     try {
 
       const rol = await this.rolRepository.findOne({ where: {rol: 'USER'} });  
 
-      const {password,...userData} = CreateUserDto;
+      const {password,...userData} = RegistroUsuarioDto;
       
       const user = this.userRepository.create({
         ...userData,
@@ -65,7 +65,7 @@ export class AuthService {
   }
 
 
-  async login(loginUserDto:LoginUserDto){
+  async login(loginUserDto:LoginUsuarioDto){
 
     const {password,email} = loginUserDto;
 

@@ -1,6 +1,6 @@
-import { IsArray, IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { IsEmail, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
-export class CreateUserDto {
+export class LoginUsuarioDto {
 
     @IsString()    
     @IsEmail()
@@ -13,10 +13,5 @@ export class CreateUserDto {
         /(?:(?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
         message: 'La contraseña debe tener una letra mayúscula, minúscula y un número'
     })
-    password: string;
-
-    @IsString()
-    @MinLength(1)
-    nombreCompleto: string;
-    
+    password: string;    
 }

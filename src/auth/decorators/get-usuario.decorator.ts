@@ -2,7 +2,7 @@ import { ExecutionContext, InternalServerErrorException, createParamDecorator } 
 
 
 
-export const GetUser = createParamDecorator((data:string,ctx:ExecutionContext)=>{
+export const GetUsuario = createParamDecorator((data:string,ctx:ExecutionContext)=>{
 
     const req =ctx.switchToHttp().getRequest();
     const user = req.user;

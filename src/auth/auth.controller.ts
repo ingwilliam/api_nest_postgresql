@@ -1,9 +1,9 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Headers, SetMetadata } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { CreateUserDto , LoginUserDto } from './dto/';
+import { RegistroUsuarioDto , LoginUsuarioDto } from './dto/';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
-import { GetUser,Auth,RoleProtected } from './decorators';
+import { GetUsuario,Auth,RoleProtected } from './decorators';
 import { IncomingHttpHeaders } from 'http';
 import { RawHeaders } from '../common/decorators/raw-headers.decorator';
 import { ValidRoles } from './interfaces/valid-role';
@@ -17,19 +17,19 @@ export class AuthController {
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
-  crearUser(@Body() createUserDto: CreateUserDto) {
+  crearUser(@Body() createUserDto: RegistroUsuarioDto) {
     return this.authService.create(createUserDto);
   }
 
   @Post('login')
-  loginUser(@Body() loginUserDto: LoginUserDto) {
+  loginUser(@Body() loginUserDto: LoginUsuarioDto) {
     return this.authService.login(loginUserDto);
   }
 
   @Get('ckeck-jwt')
   @Auth()
   ckeckjwt(
-    @GetUser() user:Usuario,    
+    @GetUsuario() user:Usuario,    
     ) {
     return this.authService.checkAuthStatus(user);
   }
@@ -38,8 +38,8 @@ export class AuthController {
   @UseGuards( AuthGuard() )
   validar_params(
     @Req() request: Request,
-    @GetUser() user:Usuario,    
-    @GetUser('email') userEmail:String,  
+    @GetUsuario() user:Usuario,    
+    @GetUsuario('email') userEmail:String,  
     @RawHeaders() rawHeaders:string[], 
     @Headers() headers: IncomingHttpHeaders
   ){
@@ -54,7 +54,7 @@ export class AuthController {
   @Get('validar_rol')   
   @Auth(ValidRoles.admin)
   validar_rol(
-    @GetUser() user:Usuario,    
+    @GetUsuario() user:Usuario,    
   ){
 
     return {      
