@@ -1,4 +1,3 @@
-import { Product } from "src/products/entities";
 import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany, ManyToOne, JoinColumn } from 'typeorm';
 import { Usuario } from "./usuario.entity";
 import { Rol } from "./rol.entity";

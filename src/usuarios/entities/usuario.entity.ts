@@ -1,5 +1,4 @@
 import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { Product } from "src/products/entities";
 import { UsuarioRol} from "./usuariorol.entity";
 import { Repositorio } from 'src/repositorios/entities/repositorio.entity';
 
@@ -26,12 +25,6 @@ export class Usuario {
         default:true
     })
     activo:boolean;
-
-    @OneToMany(
-        ()=>Product,
-        (product)=>product.user,        
-    )
-    products: Product[]
 
     @OneToMany(
         ()=>UsuarioRol,

@@ -1,7 +1,7 @@
 import { CanActivate, ExecutionContext, ForbiddenException, Injectable, InternalServerErrorException } from '@nestjs/common';
 import { Reflector } from '@nestjs/core';
 import { Observable } from 'rxjs';
-import { Usuario } from '../../entities';
+import { Usuario } from '../../../usuarios/entities';
 import { META_ROLES } from '../../decorators/role-protected.decorator';
 
 @Injectable()

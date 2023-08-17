@@ -4,12 +4,12 @@ import { CreateUserDto , LoginUserDto } from './dto/';
 import { AuthGuard } from '@nestjs/passport';
 import { Request } from 'express';
 import { GetUser,Auth,RoleProtected } from './decorators';
-import { Usuario } from './entities/usuario.entity';
 import { IncomingHttpHeaders } from 'http';
 import { RawHeaders } from '../common/decorators/raw-headers.decorator';
 import { ValidRoles } from './interfaces/valid-role';
 
 import { ApiTags } from '@nestjs/swagger';
+import { Usuario } from '../usuarios/entities';
 
 @ApiTags('Auth')
 @Controller('auth')

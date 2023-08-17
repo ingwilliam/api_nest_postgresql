@@ -6,8 +6,8 @@ import { Auth, GetUser } from 'src/auth/decorators';
 import { ValidRoles } from 'src/auth/interfaces';
 import { CargarArchivos, PathArchivos } from 'src/common/decorators/cargar-archivos-interceptor.decorator';
 import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { Usuario } from 'src/auth/entities';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { Usuario } from 'src/usuarios/entities';
 
 @Controller('repositorios')
 export class RepositoriosController {
