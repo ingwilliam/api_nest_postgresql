@@ -6,6 +6,7 @@ import { Repositorio } from './entities/repositorio.entity';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class RepositoriosService {
@@ -15,7 +16,8 @@ export class RepositoriosService {
   constructor(
     @InjectRepository(Repositorio)
     private readonly repositorioRepository: Repository<Repositorio>,
-    private readonly dataSource:DataSource
+    private readonly dataSource:DataSource,    
+    private readonly configService: ConfigService
   ) {
 
   }
@@ -31,7 +33,7 @@ export class RepositoriosService {
       const repositorios = await Promise.all(urls.map(async r => {
         const registro = await queryRunner.manager.save(Repositorio,{
           ...createRepositorioDto,
-          nombrea: r['nombre'],
+          nombre: r['nombre'],
           url: r['url'],
           usuario,
         })
@@ -51,9 +53,6 @@ export class RepositoriosService {
 
       this.handleDBExceptions(error);
     }
-
-    
-
 
   }
 
@@ -135,14 +134,14 @@ export class RepositoriosService {
   }
 
   private handleDBExceptions(error: any) {
-
-    console.log(error.code);
     
-    if (error.code === '23502')
+    const errores:string[] = this.configService.get('CODIDOS_ERRORES_POSGRSQL').split(",");    
+
+    if(errores.includes(error.code))
       throw new BadRequestException(error.detail);
 
     this.logger.error(error)
-    // console.log(error)
+        
     throw new InternalServerErrorException('Unexpected error, check server logs');
 
   }
