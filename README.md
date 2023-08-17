@@ -4,9 +4,15 @@
 
 # Correr el contenedor postgresql con phpmyadmin
 
+Ambiente de desarrollo y/o QA
+
 ```docker-compose up -d```
 
-Ingresar a la url phppgadmin-container:port, creando el servidor conectando a postgres-container, con el fin de que se pueda administrar la base de datos - OjO esto solo aplica para desarrollo y qa
+Ingresar a la url phppgadmin-container:port, creando el servidor conectando a postgres-container, con el fin de que se pueda administrar la base de datos 
+
+Ambiente de pre y producción
+
+```docker-compose -f docker-compose-produccion.yml up -d```
 
 # Git
 

@@ -1,4 +1,5 @@
-import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn } from "typeorm";
+import { Usuario } from "src/auth/entities";
+import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('repositorios')
 export class Repositorio {
@@ -6,14 +7,10 @@ export class Repositorio {
     @PrimaryGeneratedColumn('uuid')
     id:string;
 
-    @Column('text', {
-        unique: true,
-    })
+    @Column('text')
     nombre:string;
 
-    @Column('text', {
-        unique: true,
-    })
+    @Column('text')
     repositorio:string;
 
     @Column('text')
@@ -24,6 +21,12 @@ export class Repositorio {
     })
     activo:boolean;
 
+    @ManyToOne(
+        ()=>Usuario,
+        (usuario) => usuario.repositorios,
+        {onDelete:"CASCADE",nullable: false}
+    )
+    usuario:Usuario
     
     @BeforeInsert()
     checkFieldsBeforeInsert(){

@@ -10,11 +10,12 @@ export const fileFilter = (req:Request,file:Express.Multer.File,callback:Functio
     }
 
     const fileExtension = file.mimetype.split('/')[1];
-    const validExtension = ['jpg','jpeg','png','gif'];
+    const validExtension = ['jpg','jpeg','png','gif','pdf'];
     if(validExtension.includes(fileExtension))
     {
         callback(null,true);
     }
+    
 
     callback(null,false);
 

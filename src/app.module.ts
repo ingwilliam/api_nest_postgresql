@@ -11,6 +11,7 @@ import { AuthModule } from './auth/auth.module';
 import { MessagesWsModule } from './messages-ws/messages-ws.module';
 import { EnvConfiguration } from './config/app.config';
 import { RepositoriosModule } from './repositorios/repositorios.module';
+import { CloudinaryModule } from './cloudinary/cloudinary.module';
 
 
 @Module({
@@ -39,7 +40,7 @@ import { RepositoriosModule } from './repositorios/repositorios.module';
     CommonModule,
     SeedModule,
     FilesModule,    
-    AuthModule, MessagesWsModule, RepositoriosModule
+    AuthModule, MessagesWsModule, RepositoriosModule, CloudinaryModule
   ],
   controllers: [],
   providers: [],

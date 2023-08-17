@@ -14,7 +14,6 @@ export class UsuarioRol {
         (usuario) => usuario.usuarioRoles,
         {onDelete:"CASCADE"}
     )
-    @JoinColumn({ name: 'usuarioId' })
     usuario:Usuario
 
     @ManyToOne(
@@ -22,7 +21,6 @@ export class UsuarioRol {
         (rol) => rol.rolUsuarios,
         {onDelete:"CASCADE"}
     )
-    @JoinColumn({ name: 'rolId' })
     rol:Rol
 
     @BeforeInsert()
