@@ -1,4 +1,4 @@
-import { Usuario } from "src/usuarios/entities";
+import { Usuario } from "../../usuarios/entities";
 import { BeforeInsert, BeforeUpdate, Column, Entity, ManyToOne, PrimaryGeneratedColumn } from "typeorm";
 
 @Entity('repositorios')

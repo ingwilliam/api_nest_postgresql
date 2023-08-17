@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import { initialData } from './data/seed-data';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Repository } from 'typeorm';
-import { Usuario } from 'src/usuarios/entities';
+import { Usuario } from '../usuarios/entities';
 
 @Injectable()
 export class SeedService {

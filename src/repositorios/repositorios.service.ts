@@ -4,9 +4,9 @@ import { UpdateRepositorioDto } from './dto/update-repositorio.dto';
 import { Repositorio } from './entities/repositorio.entity';
 import { DataSource, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto } from '../common/dto/pagination.dto';
 import { ConfigService } from '@nestjs/config';
-import { Usuario } from 'src/usuarios/entities';
+import { Usuario } from '../usuarios/entities';
 
 @Injectable()
 export class RepositoriosService {

@@ -2,12 +2,12 @@ import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query
 import { RepositoriosService } from './repositorios.service';
 import { CreateRepositorioDto } from './dto/create-repositorio.dto';
 import { UpdateRepositorioDto } from './dto/update-repositorio.dto';
-import { Auth, GetUser } from 'src/auth/decorators';
-import { ValidRoles } from 'src/auth/interfaces';
-import { CargarArchivos, PathArchivos } from 'src/common/decorators/cargar-archivos-interceptor.decorator';
-import { CloudinaryService } from 'src/cloudinary/cloudinary.service';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { Usuario } from 'src/usuarios/entities';
+import { Auth, GetUser } from '../auth/decorators';
+import { ValidRoles } from '../auth/interfaces';
+import { CargarArchivos, PathArchivos } from '../common/decorators/cargar-archivos-interceptor.decorator';
+import { CloudinaryService } from '../cloudinary/cloudinary.service';
+import { PaginationDto } from '../common/dto/pagination.dto';
+import { Usuario } from '../usuarios/entities';
 
 @Controller('repositorios')
 export class RepositoriosController {
