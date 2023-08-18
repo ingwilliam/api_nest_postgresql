@@ -1,4 +1,4 @@
-import { IsArray, IsBoolean, IsEmail, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
+import { IsArray, IsBoolean, IsEmail, IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from "class-validator";
 
 export class CreateUsuarioDto {
 
@@ -21,6 +21,9 @@ export class CreateUsuarioDto {
 
     @IsBoolean()
     activo: boolean;
+
+    @IsIn(['BASICA','GOOGLE'])    
+    autenticacion?: string;
 
     @IsString({ each: true })
     @IsArray()

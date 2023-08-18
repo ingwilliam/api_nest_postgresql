@@ -40,8 +40,8 @@
     <script>
     function handleCredentialResponse(response) {
 
-        const body = { id_token: response.credential }
-        fetch('http://localhost:7004/api/auth/google', {
+        const body = { token: response.credential }
+        fetch('http://localhost:7004/api/v1/auth/registerGoogle', {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json'
@@ -49,9 +49,8 @@
             body: JSON.stringify(body)
         })
         .then( r=> r.json() )
-        .then( resp =>{
-            console.log(resp )
-            localStorage.setItem('email', resp.usuario.correo )
+        .then( resp =>{            
+            localStorage.setItem('email', resp.email )
         })
         .catch( console.warn )
     }
@@ -61,6 +60,7 @@
     button.onclick = async() => {
 
         console.log(google.accounts.id)
+        console.log(localStorage.getItem('email'));
         google.accounts.id.disableAutoSelect()
         google.accounts.id.revoke(localStorage.getItem('email'), done => {
             console.log('consent revoked');

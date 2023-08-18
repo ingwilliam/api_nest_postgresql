@@ -8,10 +8,12 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { Rol, Usuario,UsuarioRol, } from '../usuarios/entities';
 import { JwtStrategy } from './strategies/jwt.strategy';
+import { GoogleStrategy } from './strategies/google.strategy';
+import { FacebookStrategy } from './strategies/facebook.strategy';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService,JwtStrategy],
+  providers: [AuthService,JwtStrategy,GoogleStrategy,FacebookStrategy],
   imports:[ 
     ConfigModule,
     TypeOrmModule.forFeature([Usuario,UsuarioRol,Rol]),
@@ -29,7 +31,7 @@ import { JwtStrategy } from './strategies/jwt.strategy';
       }
     }),    
   ],
-  exports:[TypeOrmModule,JwtStrategy, PassportModule,JwtModule]
+  exports:[TypeOrmModule,JwtStrategy,GoogleStrategy, PassportModule,JwtModule]
 
 })
 export class AuthModule {}

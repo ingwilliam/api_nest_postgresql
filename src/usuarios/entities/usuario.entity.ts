@@ -1,6 +1,7 @@
 import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UsuarioRol} from "./usuariorol.entity";
 import { Repositorio } from '../../repositorios/entities/repositorio.entity';
+import { IsIn } from 'class-validator';
 
 
 @Entity('usuarios')
@@ -26,6 +27,11 @@ export class Usuario {
         default:true
     })
     activo:boolean;
+
+    @Column('text',{
+        default:'BASICA'
+    })
+    autenticacion: string;
 
     @CreateDateColumn()
     createdAt: Date;
