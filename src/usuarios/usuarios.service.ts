@@ -8,6 +8,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config';
 import { Rol, UsuarioRol } from './entities';
+import { PaginationDto } from 'src/common/dto/pagination.dto';
 
 @Injectable()
 export class UsuariosService {
@@ -43,6 +44,10 @@ export class UsuariosService {
         password: bcrypt.hashSync(password, 10),
         usuarioRoles: await Promise.all(roles.map(async r=>{
           const rol = await queryRunner.manager.findOne(Rol, { where: {rol: r} });
+          if(!rol){
+            throw new BadRequestException(`El rol no existe ${r}`);
+          }
+          
           return queryRunner.manager.create(UsuarioRol,{rol});
         })),
       });
@@ -66,8 +71,33 @@ export class UsuariosService {
 
   }
 
-  findAll() {
-    return `This action returns all usuarios`;
+  async findAll(paginationDto: PaginationDto) {
+    const { limit = 10, page = 0 } = paginationDto;
+    const [usuarios, total] = await this.usuarioRepository
+    .createQueryBuilder('usuario')
+    .leftJoinAndSelect('usuario.usuarioRoles', 'usuarioRol')
+    .leftJoinAndSelect('usuarioRol.rol', 'rol')
+    .select([
+      'usuario.id',
+      'usuario.nombreCompleto',
+      'usuario.email',
+      'usuario.activo',
+      'usuarioRol.id',    
+      'rol.rol'           
+    ])
+    .where('usuario.activo = :activo', { activo: true })
+    .take(limit)
+    .skip(page * limit)
+    .orderBy('usuario.nombreCompleto', 'ASC')
+    .getManyAndCount();
+
+    return {
+      total,
+      page,
+      limit,
+      rowsTotal: usuarios.length,
+      usuarios
+    }
   }
 
   findOne(id: number) {
@@ -91,7 +121,7 @@ export class UsuariosService {
 
     this.logger.error(error)
         
-    throw new InternalServerErrorException('Unexpected error, check server logs');
+    throw new InternalServerErrorException(error.response);
 
   }
 
