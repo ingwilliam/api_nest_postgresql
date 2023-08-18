@@ -11,14 +11,14 @@ export class UsuarioRol {
     @ManyToOne(
         ()=>Usuario,
         (usuario) => usuario.usuarioRoles,
-        {nullable: false}
+        {onDelete: 'CASCADE',nullable: false}
     )
     usuario:Usuario
 
     @ManyToOne(
         ()=>Rol,
         (rol) => rol.rolUsuarios,
-        {nullable: false}
+        {onDelete: 'CASCADE',nullable: false}
     )
     rol:Rol
 

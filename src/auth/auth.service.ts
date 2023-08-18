@@ -6,6 +6,7 @@ import { LoginUsuarioDto,RegistroUsuarioDto } from './dto/';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { JwtService } from '@nestjs/jwt';
 import { Rol, UsuarioRol ,Usuario } from '../usuarios/entities';
+import { ConfigService } from '@nestjs/config';
 
 @Injectable()
 export class AuthService {
@@ -18,9 +19,9 @@ export class AuthService {
     @InjectRepository(UsuarioRol)
     private readonly usuarioRolRepository: Repository<UsuarioRol>,
     @InjectRepository(Rol)
-    private readonly rolRepository: Repository<Rol>,
-    
-    private readonly jwtService:JwtService
+    private readonly rolRepository: Repository<Rol>,    
+    private readonly jwtService:JwtService,
+    private readonly configService: ConfigService
   ){
 
   }
@@ -100,7 +101,7 @@ export class AuthService {
 
   private handleDBExceptions(error: any):never {
 
-    if (error.code === '23505')
+    const errores:string[] = this.configService.get('CODIDOS_ERRORES_POSGRSQL').split(",");    
       throw new BadRequestException(error.detail);
 
     this.logger.error(error)

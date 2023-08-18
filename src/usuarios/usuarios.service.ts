@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException } from '@nestjs/common';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Usuario } from './entities/usuario.entity';
@@ -31,13 +31,18 @@ export class UsuariosService {
   async create(createUsuarioDto: CreateUsuarioDto, usuario: Usuario) {
 
 
-    const { roles, password, ...userData } = createUsuarioDto;
+    let { roles, password, ...userData } = createUsuarioDto;
 
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
 
     try {
+
+      if( !roles )
+      {
+        roles=['USER']
+      }
 
       const user = queryRunner.manager.create(Usuario, {
         ...userData,
@@ -73,7 +78,7 @@ export class UsuariosService {
 
   async findAll(paginationDto: PaginationDto) {
     const { limit = 10, page = 0 } = paginationDto;
-    const [usuarios, total] = await this.usuarioRepository
+    const [rows, total] = await this.usuarioRepository
     .createQueryBuilder('usuario')
     .leftJoinAndSelect('usuario.usuarioRoles', 'usuarioRol')
     .leftJoinAndSelect('usuarioRol.rol', 'rol')
@@ -95,21 +100,83 @@ export class UsuariosService {
       total,
       page,
       limit,
-      rowsTotal: usuarios.length,
-      usuarios
+      rowsTotal: rows.length,
+      rows
     }
   }
 
-  findOne(id: number) {
-    return `This action returns a #${id} usuario`;
+  async findOne(id:string) {
+    return await this.usuarioRepository.findOne({
+      where: { id: id },
+      relations: ['usuarioRoles', 'usuarioRoles.rol']
+    });
   }
 
-  update(id: number, updateUsuarioDto: UpdateUsuarioDto) {
-    return `This action updates a #${id} usuario`;
+  async update(id: string, updateUsuarioDto: UpdateUsuarioDto) {
+    const { roles, password, ...userData } = updateUsuarioDto;
+   
+    const usuario = await this.usuarioRepository.preload({
+      id,
+      ...userData          
+    });
+
+    if(password)
+    {
+      usuario.password = bcrypt.hashSync(password, 10);
+    }
+
+    const queryRunner = this.dataSource.createQueryRunner();
+    await queryRunner.connect();
+    await queryRunner.startTransaction();
+
+    try {
+
+      if( roles )
+      {
+        await queryRunner.manager.delete(UsuarioRol,{usuario:{id}});
+
+        usuario.usuarioRoles = await Promise.all(roles.map(async r=>{
+          const rol = await queryRunner.manager.findOne(Rol, { where: {rol: r} });
+          if(!rol){
+            throw new BadRequestException(`El rol no existe ${r}`);
+          }
+          
+          return queryRunner.manager.create(UsuarioRol,{rol});
+        }));
+        
+      } 
+
+      console.log(usuario);
+      
+
+      await queryRunner.manager.save(usuario);
+      await queryRunner.commitTransaction();
+      await queryRunner.release();
+
+      delete usuario.password;
+
+      return usuario;
+
+    } catch (error) {
+
+      await queryRunner.rollbackTransaction();
+      await queryRunner.release();
+
+      this.handleDBExceptions(error);
+    }
   }
 
-  remove(id: number) {
-    return `This action removes a #${id} usuario`;
+  async remove(id: string){
+    const usuario = await this.usuarioRepository.findOneBy({ id });
+
+    if (!usuario) {
+      throw new NotFoundException(`El usuario  no existe "${id}"`);
+    }
+
+    usuario.activo = false;
+    
+    return await this.usuarioRepository.save(usuario);
+
   }
 
   private handleDBExceptions(error: any) {
