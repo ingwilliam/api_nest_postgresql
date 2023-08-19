@@ -1,8 +1,9 @@
+import { BaseEntity } from "../../common/entities/base.entity";
 import { Usuario } from "../../usuarios/entities";
 import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, ManyToOne, PrimaryGeneratedColumn, UpdateDateColumn } from "typeorm";
 
 @Entity('repositorios')
-export class Repositorio {
+export class Repositorio extends BaseEntity{
 
     @PrimaryGeneratedColumn('uuid')
     id: string;
@@ -15,18 +16,8 @@ export class Repositorio {
 
     @Column('text')
     url: string;
-
-    @Column('boolean', {
-        default: true
-    })
-    activo: boolean;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
-
+    
+    
     @ManyToOne(
         () => Usuario,
         (usuario) => usuario.repositorios,

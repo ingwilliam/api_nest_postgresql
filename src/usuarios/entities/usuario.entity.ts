@@ -2,10 +2,11 @@ import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, One
 import { UsuarioRol} from "./usuariorol.entity";
 import { Repositorio } from '../../repositorios/entities/repositorio.entity';
 import { IsIn } from 'class-validator';
+import { BaseEntity } from '../../common/entities/base.entity';
 
 
 @Entity('usuarios')
-export class Usuario {
+export class Usuario extends BaseEntity{
 
     @PrimaryGeneratedColumn('uuid')
     id:string;
@@ -23,21 +24,10 @@ export class Usuario {
     @Column({ name: 'nombre_completo', type: 'varchar' })
     nombreCompleto:string;
 
-    @Column('boolean',{
-        default:true
-    })
-    activo:boolean;
-
     @Column('text',{
         default:'BASICA'
     })
     autenticacion: string;
-
-    @CreateDateColumn()
-    createdAt: Date;
-
-    @UpdateDateColumn()
-    updatedAt: Date;
 
     @OneToMany(
         ()=>UsuarioRol,

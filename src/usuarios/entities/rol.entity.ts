@@ -1,8 +1,9 @@
 import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
 import { UsuarioRol} from "./usuariorol.entity";
+import { BaseEntity } from '../../common/entities/base.entity';
 
 @Entity('roles')
-export class Rol{
+export class Rol extends BaseEntity{
 
     @PrimaryGeneratedColumn('uuid')
     id:string;
@@ -11,11 +12,6 @@ export class Rol{
         unique: true,
     })
     rol:string;
-
-    @Column('boolean',{
-        default:true
-    })
-    activo:boolean;
 
     @OneToMany(
         ()=>UsuarioRol,
