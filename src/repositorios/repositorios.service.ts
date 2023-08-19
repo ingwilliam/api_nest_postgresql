@@ -1,12 +1,14 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, ParseUUIDPipe } from '@nestjs/common';
+import { DataSource, Repository } from 'typeorm';
+import { InjectRepository } from '@nestjs/typeorm';
+import { ConfigService } from '@nestjs/config';
+
 import { CreateRepositorioDto } from './dto/create-repositorio.dto';
 import { UpdateRepositorioDto } from './dto/update-repositorio.dto';
 import { Repositorio } from './entities/repositorio.entity';
-import { DataSource, Repository } from 'typeorm';
-import { InjectRepository } from '@nestjs/typeorm';
 import { PaginationDto } from '../common/dto/pagination.dto';
-import { ConfigService } from '@nestjs/config';
 import { Usuario } from '../usuarios/entities';
+import { handleDBExceptions } from '../common/helpers/class.helper';
 
 @Injectable()
 export class RepositoriosService {
@@ -24,6 +26,8 @@ export class RepositoriosService {
 
   async create(createRepositorioDto: CreateRepositorioDto, usuario: Usuario, urls?: string[]) {
 
+    console.log('entro');
+    
     const queryRunner = this.dataSource.createQueryRunner();
     await queryRunner.connect();
     await queryRunner.startTransaction();
@@ -51,7 +55,7 @@ export class RepositoriosService {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
 
-      this.handleDBExceptions(error);
+      handleDBExceptions(error,this.logger,this.configService);
     }
 
   }
@@ -116,7 +120,7 @@ export class RepositoriosService {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
 
-      this.handleDBExceptions(error);
+      handleDBExceptions(error,this.logger,this.configService);
     }    
   }
 
@@ -132,18 +136,4 @@ export class RepositoriosService {
     return await this.repositorioRepository.save(repositorio);
 
   }
-
-  private handleDBExceptions(error: any) {
-    
-    const errores:string[] = this.configService.get('CODIDOS_ERRORES_POSGRSQL').split(",");    
-
-    if(errores.includes(error.code))
-      throw new BadRequestException(error.detail);
-
-    this.logger.error(error)
-        
-    throw new InternalServerErrorException('Unexpected error, check server logs');
-
-  }
-
 }

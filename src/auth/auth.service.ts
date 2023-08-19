@@ -1,6 +1,6 @@
 import { BadRequestException, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { Repository } from 'typeorm';
+import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt'
 import { LoginUsuarioDto, RegistroUsuarioDto, RegistroUsuarioGoogleDto } from './dto/';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
@@ -8,6 +8,7 @@ import { JwtService } from '@nestjs/jwt';
 import { Rol, UsuarioRol, Usuario } from '../usuarios/entities';
 import { ConfigService } from '@nestjs/config';
 import { CreateUsuarioDto } from 'src/usuarios/dto/create-usuario.dto';
+import { handleDBExceptions } from 'src/common/helpers/class.helper';
 
 @Injectable()
 export class AuthService {
@@ -22,7 +23,8 @@ export class AuthService {
     @InjectRepository(Rol)
     private readonly rolRepository: Repository<Rol>,
     private readonly jwtService: JwtService,
-    private readonly configService: ConfigService,        
+    private readonly configService: ConfigService,
+    private readonly dataSource: DataSource,
   ) {
 
   }
@@ -51,53 +53,87 @@ export class AuthService {
       };
 
     } catch (error) {
-      this.handleDBExceptions(error);
+      handleDBExceptions(error, this.logger, this.configService);
     }
 
 
   }
 
-  async createGoogle(registroUsuarioDto: RegistroUsuarioGoogleDto) {
+  async createExterno(email: string, nombreCompleto: string, picture: string, autenticacion: string) {
 
     try {
 
-      const { token } = registroUsuarioDto;
+      console.log(email);
+      
 
-      // const { email, nombreCompleto, picture } = await this.googleStrategy.validar(token);
+      let usuario = await this.usuarioRepository.findOne({ where: { email:email } });
 
-      // let usuario = await this.usuarioRepository.findOne({ where: { email } });
+      console.log(usuario);
 
-      // if (!usuario) {
+      console.log('----------------');
+      
+      
 
-      //   const registroUsuarioDto: CreateUsuarioDto = {
-      //     email,
-      //     password: bcrypt.hashSync(this.configService.get('USER_PASSWORD_DEFAULT'),10),
-      //     nombreCompleto,
-      //     activo: true,
-      //     autenticacion: 'GOOGLE',
-      //     roles: ['USER']
-      //   };
-
-      //   usuario = await this.usuarioRepository.create(registroUsuarioDto);
-
-      //   usuario = await this.usuarioRepository.save(usuario);
-
-      // }
-
-      // if ( !usuario.activo ) {
-      //   throw new UnauthorizedException('Hable con el administrador, usuario bloqueado')
-      // }
+      if (!usuario) {
 
 
-      // return {
-      //   ...usuario,
-      //   token: this.getJwtToken({ email: usuario.email, id: usuario.id })
-      // };
-      return {}
+        const queryRunner = this.dataSource.createQueryRunner();
+        await queryRunner.connect();
+        await queryRunner.startTransaction();
+
+        try {
+
+          const roles = ['USER']
+          const userData: CreateUsuarioDto = {
+            email,
+            password: bcrypt.hashSync(this.configService.get('USER_PASSWORD_DEFAULT'),10),
+            nombreCompleto,
+            activo: true,
+            autenticacion            
+          };
+
+
+          usuario = queryRunner.manager.create(Usuario, {
+            ...userData,            
+            usuarioRoles: await Promise.all(roles.map(async r => {
+              const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
+              if (!rol) {
+                throw new BadRequestException(`El rol no existe ${r}`);
+              }
+
+              return queryRunner.manager.create(UsuarioRol, { rol });
+            })),
+          });
+
+          await queryRunner.manager.save(usuario);
+          await queryRunner.commitTransaction();
+          await queryRunner.release();
+
+        } catch (error) {
+
+          await queryRunner.rollbackTransaction();
+          await queryRunner.release();
+
+          handleDBExceptions(error, this.logger, this.configService);
+        }
+
+
+      }
+
+      if (!usuario.activo) {
+        throw new UnauthorizedException('Hable con el administrador, usuario bloqueado')
+      }
+
+
+      return {
+        ...usuario,
+        token: this.getJwtToken({ email: usuario.email, id: usuario.id })
+      };
+
 
     } catch (error) {
 
-      this.handleDBExceptions(error);
+      handleDBExceptions(error, this.logger, this.configService);
     }
 
 
@@ -143,19 +179,6 @@ export class AuthService {
     const token = this.jwtService.sign(payload);
     return token;
 
-
-  }
-
-  private handleDBExceptions(error: any): never {
-
-    const errores: string[] = this.configService.get('CODIDOS_ERRORES_POSGRSQL').split(",");
-    
-    if(errores.includes(error.code))
-      throw new BadRequestException(error.detail);
-
-    this.logger.error(error)
-    // console.log(error)
-    throw new InternalServerErrorException('Unexpected error, check server logs');
 
   }
 

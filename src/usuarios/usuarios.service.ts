@@ -9,6 +9,7 @@ import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config';
 import { Rol, UsuarioRol } from './entities';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { handleDBExceptions } from 'src/common/helpers/class.helper';
 
 @Injectable()
 export class UsuariosService {
@@ -70,7 +71,7 @@ export class UsuariosService {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
 
-      this.handleDBExceptions(error);
+      handleDBExceptions(error,this.logger,this.configService);
     }
 
 
@@ -162,7 +163,7 @@ export class UsuariosService {
       await queryRunner.rollbackTransaction();
       await queryRunner.release();
 
-      this.handleDBExceptions(error);
+      handleDBExceptions(error,this.logger,this.configService);
     }
   }
 
@@ -177,19 +178,6 @@ export class UsuariosService {
     
     return await this.usuarioRepository.save(usuario);
 
-  }
-
-  private handleDBExceptions(error: any) {
-    
-    const errores:string[] = this.configService.get('CODIDOS_ERRORES_POSGRSQL').split(",");    
-
-    if(errores.includes(error.code))
-      throw new BadRequestException(error.detail);
-
-    this.logger.error(error)
-        
-    throw new InternalServerErrorException(error.response);
-
-  }
+  }  
 
 }

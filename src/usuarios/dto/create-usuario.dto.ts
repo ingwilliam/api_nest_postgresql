@@ -23,6 +23,7 @@ export class CreateUsuarioDto {
     activo: boolean;
 
     @IsIn(['BASICA','GOOGLE'])    
+    @IsOptional()
     autenticacion?: string;
 
     @IsString({ each: true })
