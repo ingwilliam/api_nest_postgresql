@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Headers, SetMetadata } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Headers, SetMetadata, Logger } from '@nestjs/common';
 import { AuthService } from './auth.service';
 import { RegistroUsuarioDto , LoginUsuarioDto, RegistroUsuarioGoogleDto } from './dto/';
 import { AuthGuard } from '@nestjs/passport';
@@ -14,6 +14,9 @@ import { Usuario } from '../usuarios/entities';
 @ApiTags('Auth')
 @Controller('auth')
 export class AuthController {
+
+  private readonly logger = new Logger();
+
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
@@ -23,6 +26,7 @@ export class AuthController {
 
   @Post('login')
   loginUser(@Body() loginUserDto: LoginUsuarioDto) {
+    this.logger.log({loginUserDto,context:AuthController.name});    
     return this.authService.login(loginUserDto);
   }
 

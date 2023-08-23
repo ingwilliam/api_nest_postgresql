@@ -4,10 +4,13 @@ import { SwaggerModule } from '@nestjs/swagger';
 
 import { AppModule } from './app.module';
 import { EnvConfiguration,ConfigDocumentBuilder } from './config/app.config';
+import { LoggerService } from './common/services/logger.service';
 
 
 async function bootstrap() {
-  const app = await NestFactory.create(AppModule);
+  const app = await NestFactory.create(AppModule, {
+    logger: new LoggerService() // Creacion de nuestro logger
+  });
   const logger  = new Logger('Booststrap');
 
   app.setGlobalPrefix('api');

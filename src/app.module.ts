@@ -1,4 +1,4 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { CommonModule } from './common/common.module';
@@ -22,7 +22,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     }),
     CommonModule,
     SeedModule,    
-    AuthModule, MessagesWsModule, RepositoriosModule, CloudinaryModule, UsuariosModule
+    AuthModule, MessagesWsModule, RepositoriosModule, CloudinaryModule, UsuariosModule,    
   ],
   controllers: [],
   providers: [],
