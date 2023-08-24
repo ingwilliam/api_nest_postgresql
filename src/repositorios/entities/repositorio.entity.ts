@@ -15,6 +15,9 @@ export class Repositorio extends BaseEntity{
     repositorio: string;
 
     @Column('text')
+    tipo: string;
+
+    @Column('text')
     url: string;
     
     

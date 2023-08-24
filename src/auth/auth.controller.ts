@@ -1,12 +1,10 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Headers, SetMetadata, Logger } from '@nestjs/common';
 import { AuthService } from './auth.service';
-import { RegistroUsuarioDto , LoginUsuarioDto, RegistroUsuarioGoogleDto } from './dto/';
+import { RegistroUsuarioDto , LoginUsuarioDto } from './dto/';
 import { AuthGuard } from '@nestjs/passport';
-import { Request } from 'express';
-import { GetUsuario,Auth,RoleProtected } from './decorators';
-import { IncomingHttpHeaders } from 'http';
-import { RawHeaders } from '../common/decorators/raw-headers.decorator';
-import { ValidRoles } from './interfaces/valid-role';
+import { GetUsuario,Auth } from './decorators';
+
+
 
 import { ApiTags } from '@nestjs/swagger';
 import { Usuario } from '../usuarios/entities';
@@ -15,27 +13,27 @@ import { Usuario } from '../usuarios/entities';
 @Controller('auth')
 export class AuthController {
 
-  private readonly logger = new Logger();
-
   constructor(private readonly authService: AuthService) {}
 
   @Post('register')
   register(@Body() createUserDto: RegistroUsuarioDto) {
+    console.log({createUserDto,context:AuthController.name,"description":"Ingresa a register"});    
     return this.authService.create(createUserDto);
   }
 
   @Post('login')
   loginUser(@Body() loginUserDto: LoginUsuarioDto) {
-    this.logger.log({loginUserDto,context:AuthController.name});    
-    return this.authService.login(loginUserDto);
+    console.log({loginUserDto,context:AuthController.name,"description":"Ingresa al login"});    
+    return this.authService.login(loginUserDto);  
   }
 
   @Get('ckeck-jwt')
   @Auth()
   ckeckjwt(
-    @GetUsuario() user:Usuario,    
+    @GetUsuario() usuario:Usuario,    
     ) {
-    return this.authService.checkAuthStatus(user);
+    console.log({usuario:usuario.email,context:AuthController.name,"description":"Ingresa al login"});    
+    return this.authService.checkAuthStatus(usuario);
   }
 
   @Get('google')
@@ -44,10 +42,10 @@ export class AuthController {
 
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
-  async googleLoginCallback(@Req() req) {
-    const {email,name,photo} = req.user;
-    console.log(req.user);
-    return await this.authService.createExterno(req.user.email,req.user.name,req.user.photo,'GOOGLE');
+  async googleLoginCallback(@Req() req) {    
+    const {email,name,photo} = req.user;    
+    console.log({"usuario":email,context:AuthController.name,"description":"Ingresa a login google"});    
+    return await this.authService.createExterno(email,name,photo,'GOOGLE');
   }
 
   @Get('facebook')
@@ -58,10 +56,8 @@ export class AuthController {
   @UseGuards(AuthGuard('facebook'))
   async facebookLoginCallback(@Req() req) {    
     const {email,name,photo} = req.user;
-
-    console.log(req.user);
-    
-    return await this.authService.createExterno(req.user.email,req.user.name,req.user.photo,'FACEBOOK');
+    console.log({"usuario":email,context:AuthController.name,"description":"Ingresa a login FACEBOOK"});    
+    return await this.authService.createExterno(email,name,photo,'FACEBOOK');
   }
 
   

@@ -13,8 +13,6 @@ import { handleDBExceptions } from 'src/common/helpers/class.helper';
 @Injectable()
 export class AuthService {
 
-  private readonly logger = new Logger('AuthService')
-
   constructor(
     @InjectRepository(Usuario)
     private readonly usuarioRepository: Repository<Usuario>,
@@ -37,23 +35,25 @@ export class AuthService {
 
       const { password, ...userData } = registroUsuarioDto;
 
-      const user = this.usuarioRepository.create({
+      const usuario = this.usuarioRepository.create({
         ...userData,
         password: bcrypt.hashSync(password, 10),
         usuarioRoles: [this.usuarioRolRepository.create({ rol: rol })],
       });
 
-      await this.usuarioRepository.save(user);
+      await this.usuarioRepository.save(usuario);
 
-      delete user.password;
+      delete usuario.password;
 
+      console.log({registroUsuarioDto,context:AuthService.name,"description":"Sale del register"});    
+      
       return {
-        ...user,
-        token: this.getJwtToken({ email: user.email, id: user.id })
+        ...usuario,
+        token: this.getJwtToken({ email: usuario.email, id: usuario.id })
       };
 
     } catch (error) {
-      handleDBExceptions(error, this.logger, this.configService);
+      handleDBExceptions(error, this.configService);
     }
 
 
@@ -63,16 +63,7 @@ export class AuthService {
 
     try {
 
-      console.log(email);
-      
-
-      let usuario = await this.usuarioRepository.findOne({ where: { email:email } });
-
-      console.log(usuario);
-
-      console.log('----------------');
-      
-      
+      let usuario = await this.usuarioRepository.findOne({ where: { email: email } });
 
       if (!usuario) {
 
@@ -86,15 +77,15 @@ export class AuthService {
           const roles = ['USER']
           const userData: CreateUsuarioDto = {
             email,
-            password: bcrypt.hashSync(this.configService.get('USER_PASSWORD_DEFAULT'),10),
+            password: bcrypt.hashSync(this.configService.get('USER_PASSWORD_DEFAULT'), 10),
             nombreCompleto,
             activo: true,
-            autenticacion            
+            autenticacion
           };
 
 
           usuario = queryRunner.manager.create(Usuario, {
-            ...userData,            
+            ...userData,
             usuarioRoles: await Promise.all(roles.map(async r => {
               const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
               if (!rol) {
@@ -114,7 +105,7 @@ export class AuthService {
           await queryRunner.rollbackTransaction();
           await queryRunner.release();
 
-          handleDBExceptions(error, this.logger, this.configService);
+          handleDBExceptions(error, this.configService,usuario);
         }
 
 
@@ -125,6 +116,8 @@ export class AuthService {
       }
 
 
+      console.log({"usuario":email,context:AuthService.name,"description":`Sale del login ${autenticacion}`});    
+
       return {
         ...usuario,
         token: this.getJwtToken({ email: usuario.email, id: usuario.id })
@@ -133,44 +126,62 @@ export class AuthService {
 
     } catch (error) {
 
-      handleDBExceptions(error, this.logger, this.configService);
+      handleDBExceptions(error, this.configService);
     }
 
 
   }
 
-  async checkAuthStatus(user: Usuario) {
+  async checkAuthStatus(usuario: Usuario) {
 
-    return {
-      ...user,
-      token: this.getJwtToken({ email: user.email, id: user.id })
-    };
+    try {
+      
+      console.log({usuario:usuario.email,context:AuthService.name,"description":"Ingresa al login"});    
+
+      return {
+        ...usuario,
+        token: this.getJwtToken({ email: usuario.email, id: usuario.id })
+      };
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService,usuario);
+    }
+    
 
   }
 
 
   async login(loginUserDto: LoginUsuarioDto) {
 
-    const { password, email } = loginUserDto;
+    try {
+      const { password, email } = loginUserDto;
 
-    const user = await this.usuarioRepository.findOne({
-      where: { email },
-      select: { email: true, password: true, id: true },
-      relations: ['usuarioRoles', 'usuarioRoles.rol']
-    });
+      const usuario = await this.usuarioRepository.findOne({
+        where: { email },
+        select: { email: true, password: true, id: true },
+        relations: ['usuarioRoles', 'usuarioRoles.rol']
+      });
 
-    if (!user) {
-      throw new UnauthorizedException('Credenciales no son validas')
+      if (!usuario) {
+        throw new UnauthorizedException('Credenciales no son validas')
+      }
+
+      if (!bcrypt.compareSync(password, usuario.password)) {
+        throw new UnauthorizedException('Credenciales no son validas')
+      }
+
+      console.log({loginUserDto,context:AuthService.name,"description":"Sale del login"});    
+
+      return {
+        ...usuario,
+        token: this.getJwtToken({ email: usuario.email, id: usuario.id })
+      };
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService);
     }
 
-    if (!bcrypt.compareSync(password, user.password)) {
-      throw new UnauthorizedException('Credenciales no son validas')
-    }
 
-    return {
-      ...user,
-      token: this.getJwtToken({ email: user.email, id: user.id })
-    };
 
   }
 

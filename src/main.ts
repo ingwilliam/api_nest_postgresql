@@ -5,6 +5,7 @@ import { SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { EnvConfiguration,ConfigDocumentBuilder } from './config/app.config';
 import { LoggerService } from './common/services/logger.service';
+import { ValidationExceptionFilter } from './common/helpers/validation-exception.filter';
 
 
 async function bootstrap() {
@@ -27,8 +28,11 @@ async function bootstrap() {
     })
   );
 
-  const document = SwaggerModule.createDocument(app, ConfigDocumentBuilder);
+  //Permite tener controlado cualquier exception del sistema
+  app.useGlobalFilters(new ValidationExceptionFilter());
 
+  //Documentación del api
+  const document = SwaggerModule.createDocument(app, ConfigDocumentBuilder);
   SwaggerModule.setup('api', app, document);
 
   await app.listen(EnvConfiguration().port);

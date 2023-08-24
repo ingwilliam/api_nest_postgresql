@@ -26,7 +26,16 @@ export class RepositoriosController {
     @GetUsuario() usuario: Usuario,
     @PathArchivos() urls
   ) {
-    return this.repositoriosService.create(createRepositorioDto, usuario, urls);
+    console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"Ingresa a crear el registro"});            
+    if(urls.length>0)
+    {
+      return this.repositoriosService.create(createRepositorioDto, usuario, urls);
+    }
+    else
+    {
+      console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"El registro no cuenta con archivos para cargar"});            
+      return;
+    }
   }
 
   @Post('/cloudinary')
@@ -38,34 +47,56 @@ export class RepositoriosController {
     @GetUsuario() usuario: Usuario,    
   ) {
     const urls = await this.cloudinaryService.upload(files);
-    return this.repositoriosService.create(createRepositorioDto, usuario, urls);
+    console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"Ingresa a crear el registro"});            
+    if(urls.length>0)
+    {
+      return this.repositoriosService.create(createRepositorioDto, usuario, urls);
+    }
+    else
+    {
+      console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"El registro no cuenta con archivos para cargar"});            
+      return;
+    }    
   }
 
   @Get()
   @Auth()
   findAll(
-    @Query() paginationDto:PaginationDto
+    @Query() paginationDto:PaginationDto,
+    @GetUsuario() usuario:Usuario
   ) {    
-    return this.repositoriosService.findAll(paginationDto);
+    console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"Ingresa a consultar todos los registros"});            
+    return this.repositoriosService.findAll(paginationDto,usuario);
   }
 
   @Get(':id')
   @Auth()
-  findOne(@Param('id', ParseUUIDPipe) id:string) {
-    return this.repositoriosService.findOne(id);
+  findOne(
+    @Param('id', ParseUUIDPipe) id:string,
+    @GetUsuario() usuario:Usuario
+    ) {
+    console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"Ingresa a consultar el registro"});            
+    return this.repositoriosService.findOne(id,usuario);
   }
 
   @Patch(':id')
   @Auth()
   update(
-    @Param('id', ParseUUIDPipe) id: string, @Body() updateRepositorioDto: UpdateRepositorioDto
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() updateRepositorioDto: UpdateRepositorioDto,
+    @GetUsuario() usuario:Usuario
     ) {      
-    return this.repositoriosService.update(id, updateRepositorioDto);
+    console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"Ingresa a actualizar el registro"});                  
+    return this.repositoriosService.update(id, updateRepositorioDto,usuario);
   }
 
   @Delete(':id')
   @Auth()
-  remove(@Param('id', ParseUUIDPipe) id: string) {
-    return this.repositoriosService.remove(id);
+  remove(
+    @Param('id', ParseUUIDPipe) id: string,
+    @GetUsuario() usuario:Usuario
+    ) {
+    console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"Ingresa a eliminar el registro"});            
+    return this.repositoriosService.remove(id,usuario);
   }
 }

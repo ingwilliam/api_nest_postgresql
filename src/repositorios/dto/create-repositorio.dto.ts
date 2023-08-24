@@ -2,8 +2,11 @@ import { IsBoolean, IsIn, IsOptional, IsString, MinLength } from "class-validato
 
 export class CreateRepositorioDto {
 
-    @IsIn(['Usuario'])
+    @IsIn(['Usuario','N'])
     repositorio: string;
+
+    @IsIn(['PERFIL'])        
+    tipo: string;
 
     @IsOptional()
     @IsBoolean()
