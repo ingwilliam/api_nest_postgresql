@@ -6,22 +6,19 @@ import { Auth, GetUsuario } from 'src/auth/decorators';
 import { Usuario } from './entities';
 import { ValidRoles } from 'src/auth/interfaces';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Usuarios')
 @Controller('usuarios')
 export class UsuariosController {
   constructor(private readonly usuariosService: UsuariosService) {}
 
-  @Post()
-  @Auth(ValidRoles.admin)
-  create(
-    @Body() createUsuarioDto: CreateUsuarioDto,
-    @GetUsuario() usuario: Usuario,
-    ) {
-    console.log({usuario:usuario.email,context:UsuariosController.name,"description":"Ingresa a crear el registro"});            
-    return this.usuariosService.create(createUsuarioDto,usuario);
-  }
-
   @Get()
+  @ApiResponse({status:201,description:'Producto creado',type:Usuario})
+  @ApiResponse({status:400,description:'Bad request'})
+  @ApiResponse({status:401,description:'Unauthorized'})
+  @ApiResponse({status:500,description:'Internal Server Error'})
+  @ApiBearerAuth('JWT-auth')
   @Auth()
   findAll(
     @Query() paginationDto:PaginationDto,
@@ -32,6 +29,11 @@ export class UsuariosController {
   }
 
   @Get(':id')
+  @ApiResponse({status:201,description:'Producto creado',type:Usuario})
+  @ApiResponse({status:400,description:'Bad request'})
+  @ApiResponse({status:401,description:'Unauthorized'})
+  @ApiResponse({status:500,description:'Internal Server Error'})
+  @ApiBearerAuth('JWT-auth')
   @Auth()
   findOne(
     @Param('id', ParseUUIDPipe) id:string,
@@ -41,7 +43,27 @@ export class UsuariosController {
     return this.usuariosService.findOne(id,usuario);
   }
 
+  @Post()
+  @ApiResponse({status:201,description:'Producto creado',type:Usuario})
+  @ApiResponse({status:400,description:'Bad request'})
+  @ApiResponse({status:401,description:'Unauthorized'})
+  @ApiResponse({status:500,description:'Internal Server Error'})
+  @ApiBearerAuth('JWT-auth')
+  @Auth(ValidRoles.admin)
+  create(
+    @Body() createUsuarioDto: CreateUsuarioDto,
+    @GetUsuario() usuario: Usuario,
+    ) {
+    console.log({usuario:usuario.email,context:UsuariosController.name,"description":"Ingresa a crear el registro"});            
+    return this.usuariosService.create(createUsuarioDto,usuario);
+  }
+
   @Patch(':id')
+  @ApiResponse({status:201,description:'Producto creado',type:Usuario})
+  @ApiResponse({status:400,description:'Bad request'})
+  @ApiResponse({status:401,description:'Unauthorized'})
+  @ApiResponse({status:500,description:'Internal Server Error'})
+  @ApiBearerAuth('JWT-auth')
   @Auth(ValidRoles.admin)
   update(
     @Param('id',ParseUUIDPipe) id: string,
@@ -53,6 +75,11 @@ export class UsuariosController {
   }
 
   @Delete(':id')
+  @ApiResponse({status:201,description:'Producto creado',type:Usuario})
+  @ApiResponse({status:400,description:'Bad request'})
+  @ApiResponse({status:401,description:'Unauthorized'})
+  @ApiResponse({status:500,description:'Internal Server Error'})
+  @ApiBearerAuth('JWT-auth')
   @Auth(ValidRoles.admin)
   remove(
     @Param('id',ParseUUIDPipe) id: string,

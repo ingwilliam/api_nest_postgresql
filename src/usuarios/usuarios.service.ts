@@ -121,10 +121,17 @@ export class UsuariosService {
 
       console.log({usuario:usuario.email,context:UsuariosService.name,"description":"Ingresa a consultar el registro"});            
 
-      return await this.usuarioRepository.findOne({
+      const usuariofind = await this.usuarioRepository.findOne({
         where: { id: id },
         relations: ['usuarioRoles', 'usuarioRoles.rol']
       });  
+
+      if(!usuariofind){
+      throw new NotFoundException(`El usuario  no existe "${id}"`);
+      }
+      
+      return usuariofind;
+
     } catch (error) {
       handleDBExceptions(error, this.configService,usuario);
     }

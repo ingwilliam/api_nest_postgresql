@@ -8,7 +8,9 @@ import { CargarArchivos, PathArchivos } from '../common/decorators/cargar-archiv
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Usuario } from '../usuarios/entities';
+import { ApiTags } from '@nestjs/swagger';
 
+@ApiTags('Repositorios')
 @Controller('repositorios')
 export class RepositoriosController {
 

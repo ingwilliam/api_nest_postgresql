@@ -31,8 +31,8 @@ export const ConexionDB = (): TypeOrmModuleOptions => (
 );
 
 export const ConfigDocumentBuilder = new DocumentBuilder()
-    .setTitle('Teslo RESTFull API')
-    .setDescription('Teslo shop endpoints')
+    .setTitle('API NEST POSTGRESQL')
+    .setDescription('Este proyecto cuenta con funcionalidades como autenticación (google, facebook, usuario/contraseña), logs, cruds etc. recomendado para futuros proyectos')
     .setVersion('1.0')
     .addBearerAuth(
         {
