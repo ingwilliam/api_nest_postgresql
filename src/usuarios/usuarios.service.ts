@@ -65,7 +65,7 @@ export class UsuariosService {
 
       console.log({usuario:usuario.email,context:UsuariosService.name,"description":"Sale de crear el registro"});            
 
-      return usuariocreate;
+      return {id:usuariocreate.id};
 
     } catch (error) {
 
@@ -118,6 +118,21 @@ export class UsuariosService {
     }
 
 
+  }
+
+  async findRoles(usuario: Usuario) {
+    try {
+
+      const roles = await this.rolRepository.find({select: ['rol','id'], where: { activo: true } });  
+      
+      console.log({ "usuario": usuario.email, context: UsuariosService.name, "description": 'Sale de consultar todos los roles' });
+
+      return roles;
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService,usuario);
+    }
+    
   }
 
   async findOne(id: string, usuario: Usuario) {

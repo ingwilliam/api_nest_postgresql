@@ -30,6 +30,18 @@ export class UsuariosController {
     return this.usuariosService.findAll(paginationDto,usuario);
   }
 
+  @Get('/roles')
+  @ApiBearerAuth('JWT-auth')
+  @Auth()
+  findRoles(
+    @Query() paginationDto:PaginationDto,
+    @GetUsuario() usuario:Usuario
+  ) {
+    console.log({usuario:usuario.email,context:UsuariosController.name,"description":"Ingresa a consultar todos los roles"});            
+    return this.usuariosService.findRoles(usuario);
+  }
+
+
   @Get(':id')
   @ApiResponse({status:201,description:'Producto creado',type:Usuario})
   @ApiResponse({status:400,description:'Bad request'})
