@@ -28,3 +28,10 @@ services:
       - "${PHPPGADMIN_PORT}:80"
     depends_on:
         - postgres
+  maildev:
+    image: maildev/maildev
+    container_name: maildev-container
+    restart: always
+    ports:
+      - "1080:1080"        
+      - "1025:1025"        

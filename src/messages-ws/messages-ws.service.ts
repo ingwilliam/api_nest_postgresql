@@ -48,7 +48,7 @@ export class MessagesWsService {
     }
 
     getUsernombreCompleto(socketId:string){
-        return this.connectedClients[socketId].user.nombreCompleto;    
+        return this.connectedClients[socketId].user.nombres;    
     }
 
     private ckeckUserConnection(user:Usuario){

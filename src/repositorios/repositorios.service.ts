@@ -38,7 +38,7 @@ export class RepositoriosService {
           url: r['url'],
           usuario,
         })
-        return { ...registro, usuario: registro.usuario.nombreCompleto };
+        return { ...registro, usuario: registro.usuario.nombres+' '+registro.usuario.apellidos };
       }));
 
       await queryRunner.commitTransaction();

@@ -1,12 +1,10 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Headers, SetMetadata, Logger } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { RegistroUsuarioDto , LoginUsuarioDto } from './dto/';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UseGuards, Req, Headers, SetMetadata, Logger, ParseUUIDPipe } from '@nestjs/common';
 import { AuthGuard } from '@nestjs/passport';
-import { GetUsuario,Auth } from './decorators';
-
-
-
 import { ApiTags } from '@nestjs/swagger';
+
+import { AuthService } from './auth.service';
+import { RegistroUsuarioDto , LoginUsuarioDto, ChangePasswordDto, ActiveUsuarioDto } from './dto/';
+import { GetUsuario,Auth } from './decorators';
 import { Usuario } from '../usuarios/entities';
 
 @ApiTags('Auth')
@@ -19,6 +17,20 @@ export class AuthController {
   register(@Body() createUserDto: RegistroUsuarioDto) {
     console.log({createUserDto,context:AuthController.name,"description":"Ingresa a register"});    
     return this.authService.create(createUserDto);
+  }
+
+  @Post('active/:id')
+  active(
+    @Param('id',ParseUUIDPipe) id: string,
+    ) {
+    console.log({id,context:AuthController.name,"description":"Ingresa a activar"});          
+    return this.authService.active(id);
+  }
+  
+  @Post('change-password')
+  changePassword(@Body() changePasswordDto: ChangePasswordDto) {
+    console.log({changePasswordDto,context:AuthController.name,"description":"Ingresa a actualizar el password"});    
+    return this.authService.changePassword(changePasswordDto);
   }
 
   @Post('login')

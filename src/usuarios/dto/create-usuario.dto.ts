@@ -27,13 +27,22 @@ export class CreateUsuarioDto {
     password: string;
 
     @ApiProperty({
-        description:'El nombre completo del usuario',
+        description:'Los nombres completo del usuario',
         nullable:false,
         minLength:1,        
     })
     @IsString()
     @MinLength(1)
-    nombreCompleto: string;
+    nombres: string;
+
+    @ApiProperty({
+        description:'Los apellidos completo del usuario',
+        nullable:false,
+        minLength:1,        
+    })
+    @IsString()
+    @MinLength(1)
+    apellidos?: string;
 
     @ApiProperty({
         description:'El usuario esta activo',        

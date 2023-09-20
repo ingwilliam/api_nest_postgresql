@@ -1,9 +1,10 @@
 import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
+import { ServeStaticModule } from '@nestjs/serve-static';
+
 import { CommonModule } from './common/common.module';
 import { SeedModule } from './seed/seed.module';
-import { ServeStaticModule } from '@nestjs/serve-static';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { MessagesWsModule } from './messages-ws/messages-ws.module';
@@ -18,14 +19,18 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     ConfigModule.forRoot(),
     TypeOrmModule.forRoot(ConexionDB()),
     ServeStaticModule.forRoot({
-      rootPath: join(__dirname,'..','public'),
+      rootPath: join(__dirname, '..', 'public'),
     }),
     CommonModule,
-    SeedModule,    
-    AuthModule, MessagesWsModule, RepositoriosModule, CloudinaryModule, UsuariosModule,    
+    SeedModule,
+    AuthModule, 
+    MessagesWsModule, 
+    RepositoriosModule, 
+    CloudinaryModule, 
+    UsuariosModule,
   ],
   controllers: [],
   providers: [],
-  exports:[]
+  exports: []
 })
-export class AppModule {}
+export class AppModule { }

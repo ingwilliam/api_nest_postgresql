@@ -7,13 +7,16 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { Rol, Usuario,UsuarioRol, } from '../usuarios/entities';
-import { JwtStrategy } from './strategies/jwt.strategy';
-import { GoogleStrategy } from './strategies/google.strategy';
-import { FacebookStrategy } from './strategies/facebook.strategy';
+import { JwtStrategy , GoogleStrategy , FacebookStrategy } from './strategies/';
 
 @Module({
   controllers: [AuthController],
-  providers: [AuthService,JwtStrategy,GoogleStrategy,FacebookStrategy],
+  providers: [
+    AuthService,
+    JwtStrategy,
+    GoogleStrategy,
+    FacebookStrategy
+  ],
   imports:[ 
     ConfigModule,
     TypeOrmModule.forFeature([Usuario,UsuarioRol,Rol]),
@@ -25,13 +28,19 @@ import { FacebookStrategy } from './strategies/facebook.strategy';
         return {
             secret:configService.get('JWT_SECRET'),
             signOptions:{
-              expiresIn:'2h'
+              expiresIn:'2d'
             }
           }
       }
-    }),    
+    })    
   ],
-  exports:[TypeOrmModule,JwtStrategy,GoogleStrategy, PassportModule,JwtModule]
+  exports:[
+    TypeOrmModule,
+    JwtStrategy,
+    GoogleStrategy,
+    PassportModule,
+    JwtModule
+  ]
 
 })
 export class AuthModule {}

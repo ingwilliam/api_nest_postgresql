@@ -88,16 +88,20 @@ export class UsuariosService {
         .leftJoinAndSelect('usuarioRol.rol', 'rol')
         .select([
           'usuario.id',
-          'usuario.nombreCompleto',
+          'usuario.nombres',
+          'usuario.apellidos',
           'usuario.email',
           'usuario.activo',
+          'usuario.autenticacion',
+          'usuario.createdAt',
+          'usuario.updatedAt',
           'usuarioRol.id',
           'rol.rol'
         ])
-        .where('usuario.activo = :activo', { activo: true })
+        // .where('usuario.activo = :activo', { activo: true })
         .take(limit)
         .skip(page * limit)
-        .orderBy('usuario.nombreCompleto', 'ASC')
+        .orderBy('usuario.apellidos', 'ASC')
         .getManyAndCount();
 
       console.log({ "usuario": usuario.email, context: UsuariosService.name, "description": 'Sale de consultar todos los registros' });
@@ -200,7 +204,7 @@ export class UsuariosService {
         throw new NotFoundException(`El usuario  no existe "${id}"`);
       }
   
-      usuariofind.activo = false;
+      usuariofind.activo = (usuariofind.activo)?false:true;
   
       console.log({usuario:usuario.email,context:UsuariosService.name,"description":"Sale de eliminar el registro"});            
 

@@ -1,7 +1,6 @@
 import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany, CreateDateColumn, UpdateDateColumn } from 'typeorm';
 import { UsuarioRol} from "./usuariorol.entity";
 import { Repositorio } from '../../repositorios/entities/repositorio.entity';
-import { IsIn } from 'class-validator';
 import { BaseEntity } from '../../common/entities/base.entity';
 import { ApiProperty } from '@nestjs/swagger';
 
@@ -38,8 +37,11 @@ export class Usuario extends BaseEntity{
     @ApiProperty({
         description:'El nombre completo del usuario',        
     })
-    @Column({ name: 'nombre_completo', type: 'varchar' })
-    nombreCompleto:string;
+    @Column('text')
+    nombres:string;
+
+    @Column('text')
+    apellidos:string;
 
     @ApiProperty({
         example:['BASICA','GOOGLE','FACEBOOK'],

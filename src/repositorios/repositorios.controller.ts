@@ -1,4 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query, ParseUUIDPipe } from '@nestjs/common';
+import { ApiTags } from '@nestjs/swagger';
+
 import { RepositoriosService } from './repositorios.service';
 import { CreateRepositorioDto } from './dto/create-repositorio.dto';
 import { UpdateRepositorioDto } from './dto/update-repositorio.dto';
@@ -8,7 +10,7 @@ import { CargarArchivos, PathArchivos } from '../common/decorators/cargar-archiv
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Usuario } from '../usuarios/entities';
-import { ApiTags } from '@nestjs/swagger';
+
 
 @ApiTags('Repositorios')
 @Controller('repositorios')

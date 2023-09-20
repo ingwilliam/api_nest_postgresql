@@ -2,6 +2,10 @@
 import { DocumentBuilder } from "@nestjs/swagger";
 import { TypeOrmModuleOptions } from "@nestjs/typeorm"
 
+export const optionsCors = {
+    origin: "*",
+    methods: "GET,PUT,PATCH,POST,DELETE",        
+  };
 
 export const EnvConfiguration = () => ({
     environment: process.env.NODE_ENV || 'dev',

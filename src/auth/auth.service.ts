@@ -1,14 +1,17 @@
-import { BadRequestException, Injectable, InternalServerErrorException, Logger, UnauthorizedException } from '@nestjs/common';
+import { BadRequestException, Injectable, InternalServerErrorException, Logger, NotFoundException, UnauthorizedException } from '@nestjs/common';
+import { ConfigService } from '@nestjs/config';
 import { InjectRepository } from '@nestjs/typeorm';
+import { JwtService } from '@nestjs/jwt';
 import { DataSource, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt'
-import { LoginUsuarioDto, RegistroUsuarioDto, RegistroUsuarioGoogleDto } from './dto/';
+
+import { LoginUsuarioDto, RegistroUsuarioDto, RegistroUsuarioGoogleDto,ChangePasswordDto, ActiveUsuarioDto } from './dto/';
+import { CreateUsuarioDto } from '../usuarios/dto/create-usuario.dto';
 import { JwtPayload } from './interfaces/jwt-payload.interface';
-import { JwtService } from '@nestjs/jwt';
 import { Rol, UsuarioRol, Usuario } from '../usuarios/entities';
-import { ConfigService } from '@nestjs/config';
-import { CreateUsuarioDto } from 'src/usuarios/dto/create-usuario.dto';
-import { handleDBExceptions } from 'src/common/helpers/class.helper';
+import { handleDBExceptions, sendEmailRegister, sendPasswordRegister } from '../common/helpers/class.helper';
+import {v4 as uuid} from 'uuid';
+
 
 @Injectable()
 export class AuthService {
@@ -35,22 +38,43 @@ export class AuthService {
 
       const { password, ...userData } = registroUsuarioDto;
 
-      const usuario = this.usuarioRepository.create({
-        ...userData,
-        password: bcrypt.hashSync(password, 10),
-        usuarioRoles: [this.usuarioRolRepository.create({ rol: rol })],
-      });
+      let usuario = await this.usuarioRepository.findOne({ where: { email: registroUsuarioDto.email } });
 
-      await this.usuarioRepository.save(usuario);
+      if (!usuario) {
 
-      delete usuario.password;
 
-      console.log({registroUsuarioDto,context:AuthService.name,"description":"Sale del register"});    
-      
-      return {
-        ...usuario,
-        token: this.getJwtToken({ email: usuario.email, id: usuario.id })
-      };
+        usuario = this.usuarioRepository.create({
+          ...userData,
+          password: bcrypt.hashSync(password, 10),
+          usuarioRoles: [this.usuarioRolRepository.create({ rol: rol })],
+        });
+
+        await this.usuarioRepository.save(usuario);
+
+        delete usuario.password;
+
+
+        const sendEmail = await sendEmailRegister(this.configService,usuario.id)
+
+        console.log({ registroUsuarioDto, context: AuthService.name, "description": "Sale del register" });
+
+        if (sendEmail === true) {
+          console.log({ registroUsuarioDto, context: AuthService.name, "description": "Correo electrónico de activación enviado con éxito" });
+        }
+        else {
+          console.log({ registroUsuarioDto, context: AuthService.name, "description": `Error al enviar el correo de activación a ${registroUsuarioDto.email}, error ${sendEmail}` });
+          throw new BadRequestException(`Error al enviar el correo de activación a ${registroUsuarioDto.email}.`);
+        }
+
+        const { token, expirationDate } = this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + +usuario.apellidos, id: usuario.id })
+        return {
+          token,
+          expirationDate
+        };
+      }
+      else {
+        throw new BadRequestException(`El email ${registroUsuarioDto.email} ya existe`);
+      }
 
     } catch (error) {
       handleDBExceptions(error, this.configService);
@@ -59,7 +83,78 @@ export class AuthService {
 
   }
 
-  async createExterno(email: string, nombreCompleto: string, picture: string, autenticacion: string) {
+
+  async active(id: string) {
+
+    try {
+
+      const usuariofind = await this.usuarioRepository.findOneBy({id});
+
+      if (!usuariofind) {
+        throw new NotFoundException(`El usuario  no existe "${id}"`);
+      }
+  
+      usuariofind.activo = true;
+           
+      await this.usuarioRepository.save(usuariofind)
+
+      console.log({usuario:usuariofind.email,context:AuthService.name,"description":"Sale de activar"});            
+
+      return ;      
+            
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService);
+    }
+
+  }
+  
+  
+  async changePassword(changePasswordDto: ChangePasswordDto) {
+
+    try {
+
+      const { email } = changePasswordDto;
+
+      const usuariofind = await this.usuarioRepository.findOne({ where: { email }, });
+
+      if (!usuariofind) {
+        throw new NotFoundException(`El usuario  no existe "${email}"`);
+      }
+  
+      const password = uuid();
+
+      usuariofind.password = bcrypt.hashSync(password, 10);
+           
+      const sendEmail = await sendPasswordRegister(this.configService,usuariofind.email,password)
+
+      console.log({ changePasswordDto, context: AuthService.name, "description": "Sale del register" });
+
+      if (sendEmail === true) {
+        console.log({ changePasswordDto, context: AuthService.name, "description": "Correo electrónico de actualización password enviado con éxito" });
+      }
+      else {
+        console.log({ changePasswordDto, context: AuthService.name, "description": `Error al enviar el correo de actualización password a ${changePasswordDto.email}, error ${sendEmail}` });
+        throw new BadRequestException(`Error al enviar el correo de activación a ${changePasswordDto.email}.`);
+      }
+
+      await this.usuarioRepository.save(usuariofind)
+      
+      console.log({usuario:email,context:AuthService.name,"description":"Sale de actualizar el password"});            
+      
+
+      return ;      
+            
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService);
+    }
+
+
+  }
+
+
+  async createExterno(email: string, nombres: string, picture: string, autenticacion: string) {
 
     try {
 
@@ -78,7 +173,7 @@ export class AuthService {
           const userData: CreateUsuarioDto = {
             email,
             password: bcrypt.hashSync(this.configService.get('USER_PASSWORD_DEFAULT'), 10),
-            nombreCompleto,
+            nombres,
             activo: true,
             autenticacion
           };
@@ -105,7 +200,7 @@ export class AuthService {
           await queryRunner.rollbackTransaction();
           await queryRunner.release();
 
-          handleDBExceptions(error, this.configService,usuario);
+          handleDBExceptions(error, this.configService, usuario);
         }
 
 
@@ -116,11 +211,11 @@ export class AuthService {
       }
 
 
-      console.log({"usuario":email,context:AuthService.name,"description":`Sale del login ${autenticacion}`});    
+      console.log({ "usuario": email, context: AuthService.name, "description": `Sale del login ${autenticacion}` });
 
       return {
         ...usuario,
-        token: this.getJwtToken({ email: usuario.email, id: usuario.id })
+        token: this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + +usuario.apellidos, id: usuario.id })
       };
 
 
@@ -135,21 +230,22 @@ export class AuthService {
   async checkAuthStatus(usuario: Usuario) {
 
     try {
-      
-      console.log({usuario:usuario.email,context:AuthService.name,"description":"Ingresa al login"});    
+
+      console.log({ usuario: usuario.email, context: AuthService.name, "description": "Ingresa al login" });
+
+      const {id,email,nombres,apellidos,activo}=usuario
 
       return {
-        ...usuario,
-        token: this.getJwtToken({ email: usuario.email, id: usuario.id })
+        usuario:{id,email,nombres,apellidos,activo},
+        ...this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + ' ' + usuario.apellidos, id: usuario.id })
       };
 
     } catch (error) {
-      handleDBExceptions(error, this.configService,usuario);
+      handleDBExceptions(error, this.configService, usuario);
     }
-    
+
 
   }
-
 
   async login(loginUserDto: LoginUsuarioDto) {
 
@@ -158,8 +254,8 @@ export class AuthService {
 
       const usuario = await this.usuarioRepository.findOne({
         where: { email },
-        select: { email: true, password: true, id: true },
-        relations: ['usuarioRoles', 'usuarioRoles.rol']
+        select: { email: true, nombres: true, apellidos: true, password: true, activo: true, id: true },        
+        //relations: ['usuarioRoles', 'usuarioRoles.rol']
       });
 
       if (!usuario) {
@@ -170,11 +266,17 @@ export class AuthService {
         throw new UnauthorizedException('Credenciales no son validas')
       }
 
-      console.log({loginUserDto,context:AuthService.name,"description":"Sale del login"});    
+      if (!usuario.activo) {
+        throw new UnauthorizedException(`Su cuenta no esta activa. revise su bandeja de entrada del email ${usuario.email}, con el asunto (${this.configService.get('NAME_APLICATION')} - Activación de usuario) y active su cuenta`)
+      }
+
+      delete usuario.password
+      
+      console.log({ loginUserDto, context: AuthService.name, "description": "Sale del login" });
 
       return {
-        ...usuario,
-        token: this.getJwtToken({ email: usuario.email, id: usuario.id })
+        usuario,
+        ...this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + ' ' + usuario.apellidos, id: usuario.id })
       };
 
     } catch (error) {
@@ -185,10 +287,15 @@ export class AuthService {
 
   }
 
+
+
+  
+
   private getJwtToken(payload: JwtPayload) {
 
     const token = this.jwtService.sign(payload);
-    return token;
+    const decodedToken = this.jwtService.verify(token);
+    return { token, expirationDate: decodedToken.exp };
 
 
   }

@@ -3,7 +3,7 @@ import { Column, CreateDateColumn, UpdateDateColumn } from 'typeorm';
   export abstract class BaseEntity {
 
     @Column('boolean', {
-        default: true
+        default: false
     })
     activo: boolean;
     

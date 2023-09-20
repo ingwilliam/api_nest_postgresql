@@ -1,4 +1,6 @@
 import { Controller, Get, Post, Body, Patch, Param, Delete, Query, ParseUUIDPipe } from '@nestjs/common';
+import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+
 import { UsuariosService } from './usuarios.service';
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
@@ -6,7 +8,7 @@ import { Auth, GetUsuario } from 'src/auth/decorators';
 import { Usuario } from './entities';
 import { ValidRoles } from 'src/auth/interfaces';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
-import { ApiBearerAuth, ApiResponse, ApiTags } from '@nestjs/swagger';
+
 
 @ApiTags('Usuarios')
 @Controller('usuarios')
