@@ -2,7 +2,7 @@ import { BadRequestException, Injectable, InternalServerErrorException, Logger, 
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Usuario } from './entities/usuario.entity';
-import { DataSource, Repository } from 'typeorm';
+import { DataSource, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import * as bcrypt from 'bcrypt'
@@ -34,47 +34,56 @@ export class UsuariosService {
 
     let { roles, password, ...userData } = createUsuarioDto;
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
 
-    try {
+    let validateEmail = await this.usuarioRepository.findOne({ where: { email: createUsuarioDto.email } });
 
-      if (!roles) {
-        roles = ['USER']
+    if (!validateEmail) {
+
+
+      const queryRunner = this.dataSource.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      try {
+
+        if (!roles) {
+          roles = ['USER']
+        }
+
+        const usuariocreate = queryRunner.manager.create(Usuario, {
+          ...userData,
+          password: bcrypt.hashSync(password, 10),
+          usuarioRoles: await Promise.all(roles.map(async r => {
+            const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
+            if (!rol) {
+              throw new BadRequestException(`El rol no existe ${r}`);
+            }
+
+            return queryRunner.manager.create(UsuarioRol, { rol });
+          })),
+        });
+
+        await queryRunner.manager.save(usuariocreate);
+        await queryRunner.commitTransaction();
+        await queryRunner.release();
+
+        delete usuariocreate.password;
+
+        console.log({ usuario: usuario.email, context: UsuariosService.name, "description": "Sale de crear el registro" });
+
+        return { id: usuariocreate.id };
+
+      } catch (error) {
+
+        await queryRunner.rollbackTransaction();
+        await queryRunner.release();
+
+        handleDBExceptions(error, this.configService, usuario);
       }
-
-      const usuariocreate = queryRunner.manager.create(Usuario, {
-        ...userData,
-        password: bcrypt.hashSync(password, 10),
-        usuarioRoles: await Promise.all(roles.map(async r => {
-          const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
-          if (!rol) {
-            throw new BadRequestException(`El rol no existe ${r}`);
-          }
-
-          return queryRunner.manager.create(UsuarioRol, { rol });
-        })),
-      });
-
-      await queryRunner.manager.save(usuariocreate);
-      await queryRunner.commitTransaction();
-      await queryRunner.release();
-
-      delete usuariocreate.password;
-
-      console.log({usuario:usuario.email,context:UsuariosService.name,"description":"Sale de crear el registro"});            
-
-      return {id:usuariocreate.id};
-
-    } catch (error) {
-
-      await queryRunner.rollbackTransaction();
-      await queryRunner.release();
-
-      handleDBExceptions(error, this.configService,usuario);
     }
-
+    else {
+      throw new BadRequestException(`El email ${validateEmail.email} ya existe`);
+    }
 
   }
 
@@ -101,7 +110,7 @@ export class UsuariosService {
         // .where('usuario.activo = :activo', { activo: true })
         .take(limit)
         .skip(page * limit)
-        .orderBy('usuario.apellidos', 'ASC')
+        .orderBy('usuario.createdAt', 'DESC')
         .getManyAndCount();
 
       console.log({ "usuario": usuario.email, context: UsuariosService.name, "description": 'Sale de consultar todos los registros' });
@@ -114,7 +123,7 @@ export class UsuariosService {
         rows
       }
     } catch (error) {
-      handleDBExceptions(error, this.configService,usuario);
+      handleDBExceptions(error, this.configService, usuario);
     }
 
 
@@ -123,90 +132,111 @@ export class UsuariosService {
   async findRoles(usuario: Usuario) {
     try {
 
-      const roles = await this.rolRepository.find({select: ['rol','id'], where: { activo: true } });  
-      
+      const roles = await this.rolRepository.find({ select: ['rol', 'id'], where: { activo: true } });
+
       console.log({ "usuario": usuario.email, context: UsuariosService.name, "description": 'Sale de consultar todos los roles' });
 
       return roles;
 
     } catch (error) {
-      handleDBExceptions(error, this.configService,usuario);
+      handleDBExceptions(error, this.configService, usuario);
     }
-    
+
   }
 
   async findOne(id: string, usuario: Usuario) {
     try {
 
-      console.log({usuario:usuario.email,context:UsuariosService.name,"description":"Ingresa a consultar el registro"});            
+      console.log({ usuario: usuario.email, context: UsuariosService.name, "description": "Ingresa a consultar el registro" });
 
       const usuariofind = await this.usuarioRepository.findOne({
         where: { id: id },
         relations: ['usuarioRoles', 'usuarioRoles.rol']
-      });  
+      });
 
-      if(!usuariofind){
-      throw new NotFoundException(`El usuario  no existe "${id}"`);
+      if (!usuariofind) {
+        throw new NotFoundException(`El usuario  no existe "${id}"`);
       }
+
+      const {createdAt,updatedAt,autenticacion,usuarioRoles,...userData} = usuariofind
+
+      const roles = []
+      for(const key of Object.keys(usuarioRoles)){
+          roles.push(usuarioRoles[key].rol.rol);
+      }
+
+      userData['roles']=roles
       
-      return usuariofind;
+      delete userData.id
+
+      return userData;
 
     } catch (error) {
-      handleDBExceptions(error, this.configService,usuario);
+      handleDBExceptions(error, this.configService, usuario);
     }
-    
+
   }
 
   async update(id: string, updateUsuarioDto: UpdateUsuarioDto, usuario: Usuario) {
     const { roles, password, ...userData } = updateUsuarioDto;
 
-    const usuariofind = await this.usuarioRepository.preload({
-      id,
-      ...userData
-    });
+    let validateEmail = await this.usuarioRepository.findOne({ where: { email: updateUsuarioDto.email,id:Not(id) } });
 
-    if (password) {
-      usuariofind.password = bcrypt.hashSync(password, 10);
-    }
+    if (!validateEmail) {
 
-    const queryRunner = this.dataSource.createQueryRunner();
-    await queryRunner.connect();
-    await queryRunner.startTransaction();
+      const usuariofind = await this.usuarioRepository.preload({
+        id,
+        ...userData
+      });
 
-    try {
-
-      if (roles) {
-        await queryRunner.manager.delete(UsuarioRol, { usuario: { id } });
-
-        usuariofind.usuarioRoles = await Promise.all(roles.map(async r => {
-          const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
-          if (!rol) {
-            throw new BadRequestException(`El rol no existe ${r}`);
-          }
-
-          return queryRunner.manager.create(UsuarioRol, { rol });
-        }));
-
+      if (password) {
+        usuariofind.password = bcrypt.hashSync(password, 10);
       }
 
-      await queryRunner.manager.save(usuariofind);
-      await queryRunner.commitTransaction();
-      await queryRunner.release();
+      const queryRunner = this.dataSource.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
 
-      delete usuariofind.password;
+      try {
 
-      console.log({usuario:usuario.email,context:UsuariosService.name,"description":"Sale de actualizar el registro"});            
+        if (roles) {
+          await queryRunner.manager.delete(UsuarioRol, { usuario: { id } });
 
-  
-      return usuariofind;
+          usuariofind.usuarioRoles = await Promise.all(roles.map(async r => {
+            const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
+            if (!rol) {
+              throw new BadRequestException(`El rol no existe ${r}`);
+            }
 
-    } catch (error) {
+            return queryRunner.manager.create(UsuarioRol, { rol });
+          }));
 
-      await queryRunner.rollbackTransaction();
-      await queryRunner.release();
+        }
 
-      handleDBExceptions(error, this.configService,usuario);
+        await queryRunner.manager.save(usuariofind);
+        await queryRunner.commitTransaction();
+        await queryRunner.release();
+
+        delete usuariofind.password;
+
+        console.log({ usuario: usuario.email, context: UsuariosService.name, "description": "Sale de actualizar el registro" });
+
+
+        return { id: usuariofind.id };
+
+      } catch (error) {
+
+        await queryRunner.rollbackTransaction();
+        await queryRunner.release();
+
+        handleDBExceptions(error, this.configService, usuario);
+      }
+
     }
+    else {
+      throw new BadRequestException(`El email ${validateEmail.email} ya existe`);
+    }
+
   }
 
   async remove(id: string, usuario: Usuario) {
@@ -218,18 +248,18 @@ export class UsuariosService {
       if (!usuariofind) {
         throw new NotFoundException(`El usuario  no existe "${id}"`);
       }
-  
-      usuariofind.activo = (usuariofind.activo)?false:true;
-  
-      console.log({usuario:usuario.email,context:UsuariosService.name,"description":"Sale de eliminar el registro"});            
 
-      return await this.usuarioRepository.save(usuariofind);      
+      usuariofind.activo = (usuariofind.activo) ? false : true;
+
+      console.log({ usuario: usuario.email, context: UsuariosService.name, "description": "Sale de eliminar el registro" });
+
+      return await this.usuarioRepository.save(usuariofind);
 
     } catch (error) {
-       handleDBExceptions(error, this.configService,usuario);
+      handleDBExceptions(error, this.configService, usuario);
     }
 
-    
+
 
   }
 
