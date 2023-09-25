@@ -90,7 +90,8 @@ export class UsuariosService {
   async findAll(paginationDto: PaginationDto, usuario: Usuario) {
 
     try {
-      const { limit = 10, page = 0 } = paginationDto;
+      const { limit = 10, page = 1 } = paginationDto;
+      
       const [rows, total] = await this.usuarioRepository
         .createQueryBuilder('usuario')
         .leftJoinAndSelect('usuario.usuarioRoles', 'usuarioRol')
@@ -109,7 +110,7 @@ export class UsuariosService {
         ])
         // .where('usuario.activo = :activo', { activo: true })
         .take(limit)
-        .skip(page * limit)
+        .skip((page-1) * limit)
         .orderBy('usuario.createdAt', 'DESC')
         .getManyAndCount();
 

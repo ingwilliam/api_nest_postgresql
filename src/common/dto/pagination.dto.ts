@@ -19,7 +19,7 @@ export class PaginationDto {
         default:0
     })
     @IsOptional()    
-    @Min(0)
+    @Min(1)
     @Type( () => Number ) // enableImplicitConversions: true
     page?: number;
 
