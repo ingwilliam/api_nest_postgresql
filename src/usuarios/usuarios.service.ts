@@ -2,12 +2,12 @@ import { BadRequestException, Injectable, InternalServerErrorException, Logger, 
 import { CreateUsuarioDto } from './dto/create-usuario.dto';
 import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Usuario } from './entities/usuario.entity';
-import { DataSource, Not, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 import { InjectRepository } from '@nestjs/typeorm';
 
 import * as bcrypt from 'bcrypt'
 import { ConfigService } from '@nestjs/config';
-import { Rol, UsuarioRol } from './entities';
+import { Menu, MenuRol, Rol, UsuarioRol } from './entities';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { handleDBExceptions } from 'src/common/helpers/class.helper';
 
@@ -21,11 +21,128 @@ export class UsuariosService {
     private readonly usuarioRepository: Repository<Usuario>,
     @InjectRepository(UsuarioRol)
     private readonly usuarioRolRepository: Repository<UsuarioRol>,
+    @InjectRepository(MenuRol)
+    private readonly menuRolRepository: Repository<MenuRol>,
     @InjectRepository(Rol)
     private readonly rolRepository: Repository<Rol>,
     private readonly dataSource: DataSource,
     private readonly configService: ConfigService
   ) {
+
+  }
+
+
+  async config(usuario: Usuario) {
+    try {
+
+      const queryRunner = this.dataSource.createQueryRunner();
+      await queryRunner.connect();
+      await queryRunner.startTransaction();
+
+      try {
+
+        let rolAdmin = await this.rolRepository.findOne({ where: { rol: 'ADMIN' } });
+        if (!rolAdmin) {
+          rolAdmin = queryRunner.manager.create(Rol, {
+            rol: 'ADMIN',
+            activo: true
+          });
+          await queryRunner.manager.save(rolAdmin);
+        }
+
+        let rolUser = await this.rolRepository.findOne({ where: { rol: 'USER-EXT' } });
+        if (!rolUser) {
+          rolUser = queryRunner.manager.create(Rol, {
+            rol: 'USER-EXT',
+            activo: true
+          });
+          await queryRunner.manager.save(rolUser);
+        }
+
+        rolUser = await this.rolRepository.findOne({ where: { rol: 'USER-INT' } });
+        if (!rolUser) {
+          rolUser = queryRunner.manager.create(Rol, {
+            rol: 'USER-INT',
+            activo: true
+          });
+          await queryRunner.manager.save(rolUser);
+        }
+
+        await queryRunner.manager
+        .createQueryBuilder()
+        .delete()
+        .from(Menu)
+        .execute();
+
+        await queryRunner.manager
+        .createQueryBuilder()
+        .delete()
+        .from(MenuRol)
+        .execute();
+
+        const rolesHome = ['USER-INT','USER-EXT']
+        const rolesUsers = ['USER-EXT']
+
+        const menuItem = [
+          {
+            titulo: 'Home',
+            subTitulo: 'Home',
+            icono: 'las la-home',
+            link: 'index-admin',
+            activo: true,
+            menuRoles: await Promise.all(rolesHome.map(async r => {
+              const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
+              if (!rol) {
+                throw new BadRequestException(`El rol no existe ${r}`);
+              }
+  
+              return queryRunner.manager.create(MenuRol, { rol,activo:true});
+            })),
+          },
+          {
+            titulo: 'Usuarios',
+            subTitulo: 'Gestión de usuarios',
+            icono: 'las la-users',
+            link: 'users-admin',
+            activo: true,
+            menuRoles: await Promise.all(rolesUsers.map(async r => {
+              const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
+              if (!rol) {
+                throw new BadRequestException(`El rol no existe ${r}`);
+              }
+  
+              return queryRunner.manager.create(MenuRol, { rol,activo:true });
+            })),
+          }
+        ]
+
+        const menuCreate = queryRunner.manager.create(Menu, menuItem);
+
+        await queryRunner.manager.save(menuCreate);
+
+        await queryRunner.commitTransaction();
+        await queryRunner.release();
+                
+
+        console.log({ "usuario": usuario.email, context: UsuariosService.name, "description": 'Sale de configurar todo' });
+
+        return ;
+
+      } catch (error) {
+
+        await queryRunner.rollbackTransaction();
+        await queryRunner.release();
+
+        handleDBExceptions(error, this.configService, usuario);
+      }
+
+
+
+      
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService, usuario);
+    }
 
   }
 
@@ -90,8 +207,10 @@ export class UsuariosService {
   async findAll(paginationDto: PaginationDto, usuario: Usuario) {
 
     try {
-      const { limit = 10, page = 1 } = paginationDto;
-      
+      const { limit = 10, page = 1, filter = '' } = paginationDto;
+
+      const key = (filter['key']) ? filter['key'] : ''
+
       const [rows, total] = await this.usuarioRepository
         .createQueryBuilder('usuario')
         .leftJoinAndSelect('usuario.usuarioRoles', 'usuarioRol')
@@ -109,8 +228,11 @@ export class UsuariosService {
           'rol.rol'
         ])
         // .where('usuario.activo = :activo', { activo: true })
+        .where('unaccent(usuario.nombres) ILIKE unaccent(:keyword) OR unaccent(usuario.apellidos) ILIKE unaccent(:keyword)', {
+          keyword: `%${key}%`,
+        })
         .take(limit)
-        .skip((page-1) * limit)
+        .skip((page - 1) * limit)
         .orderBy('usuario.createdAt', 'DESC')
         .getManyAndCount();
 
@@ -145,6 +267,30 @@ export class UsuariosService {
 
   }
 
+  async findMenus(usuario: Usuario) {
+    try {
+
+      const roles = []
+      for (const usuarioRol of usuario.usuarioRoles) {
+        roles.push(usuarioRol.rol.id)        
+      }
+
+      const menu = await this.menuRolRepository.find({ 
+        where: { rol: In(roles) },
+        relations: ['menu'], // Cargar la relación "menu"
+      });
+
+      const uniqueMenu = Array.from(new Set(menu.map(item => JSON.stringify(item.menu))))
+      .map(item => JSON.parse(item));
+
+      return uniqueMenu;
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService, usuario);
+    }
+
+  }
+
   async findOne(id: string, usuario: Usuario) {
     try {
 
@@ -159,15 +305,15 @@ export class UsuariosService {
         throw new NotFoundException(`El usuario  no existe "${id}"`);
       }
 
-      const {createdAt,updatedAt,autenticacion,usuarioRoles,...userData} = usuariofind
+      const { createdAt, updatedAt, autenticacion, usuarioRoles, ...userData } = usuariofind
 
       const roles = []
-      for(const key of Object.keys(usuarioRoles)){
-          roles.push(usuarioRoles[key].rol.rol);
+      for (const key of Object.keys(usuarioRoles)) {
+        roles.push(usuarioRoles[key].rol.rol);
       }
 
-      userData['roles']=roles
-      
+      userData['roles'] = roles
+
       delete userData.id
 
       return userData;
@@ -181,7 +327,7 @@ export class UsuariosService {
   async update(id: string, updateUsuarioDto: UpdateUsuarioDto, usuario: Usuario) {
     const { roles, password, ...userData } = updateUsuarioDto;
 
-    let validateEmail = await this.usuarioRepository.findOne({ where: { email: updateUsuarioDto.email,id:Not(id) } });
+    let validateEmail = await this.usuarioRepository.findOne({ where: { email: updateUsuarioDto.email, id: Not(id) } });
 
     if (!validateEmail) {
 

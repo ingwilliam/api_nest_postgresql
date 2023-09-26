@@ -15,6 +15,15 @@ import { PaginationDto } from 'src/common/dto/pagination.dto';
 export class UsuariosController {
   constructor(private readonly usuariosService: UsuariosService) {}
 
+  @Get('config')
+  @Auth(ValidRoles.admin)
+  config(
+    @GetUsuario() usuario:Usuario
+  ) {
+    console.log({usuario:usuario.email,context:UsuariosController.name,"description":"Ingresa de configurar todo"});            
+    return this.usuariosService.config(usuario);
+  }
+  
   @Get()
   @ApiResponse({status:201,description:'Producto creado',type:Usuario})
   @ApiResponse({status:400,description:'Bad request'})
@@ -39,6 +48,17 @@ export class UsuariosController {
   ) {
     console.log({usuario:usuario.email,context:UsuariosController.name,"description":"Ingresa a consultar todos los roles"});            
     return this.usuariosService.findRoles(usuario);
+  }
+
+  @Get('/menus')
+  @ApiBearerAuth('JWT-auth')
+  @Auth()
+  findMenus(
+    @Query() paginationDto:PaginationDto,
+    @GetUsuario() usuario:Usuario
+  ) {
+    console.log({usuario:usuario.email,context:UsuariosController.name,"description":"Ingresa a consultar todos los roles"});            
+    return this.usuariosService.findMenus(usuario);
   }
 
 

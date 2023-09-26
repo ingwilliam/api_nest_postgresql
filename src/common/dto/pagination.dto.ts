@@ -23,4 +23,8 @@ export class PaginationDto {
     @Type( () => Number ) // enableImplicitConversions: true
     page?: number;
 
+    @IsOptional()    
+    @Type( () => Object ) // enableImplicitConversions: true
+    filter?: Object;
+
 }

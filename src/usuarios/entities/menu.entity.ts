@@ -1,10 +1,9 @@
 import { BeforeInsert, BeforeUpdate, Column, Entity, PrimaryGeneratedColumn, OneToMany } from 'typeorm';
-import { UsuarioRol} from "./usuariorol.entity";
+import { MenuRol} from "./menurol.entity";
 import { BaseEntity } from '../../common/entities/base.entity';
-import { MenuRol } from './menurol.entity';
 
-@Entity('roles')
-export class Rol extends BaseEntity{
+@Entity('menus')
+export class Menu extends BaseEntity{
 
     @PrimaryGeneratedColumn('uuid')
     id:string;
@@ -12,21 +11,23 @@ export class Rol extends BaseEntity{
     @Column('text', {
         unique: true,
     })
-    rol:string;
+    titulo:string;
 
-    @OneToMany(
-        ()=>UsuarioRol,
-        (usuarioRol)=>usuarioRol.rol,        
-        {cascade:true}       
-    )
-    rolUsuarios: UsuarioRol[]
+    @Column('text')
+    subTitulo:string;
+
+    @Column('text')
+    icono:string;
+
+    @Column('text')
+    link:string;
 
     @OneToMany(
         ()=>MenuRol,
-        (menuRol)=>menuRol.rol,        
+        (menuRol)=>menuRol.menu,        
         {cascade:true}       
     )
-    rolMenus: MenuRol[]
+    menuRoles: MenuRol[]
 
     @BeforeInsert()
     checkFieldsBeforeInsert(){

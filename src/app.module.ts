@@ -4,7 +4,6 @@ import { TypeOrmModule } from '@nestjs/typeorm';
 import { ServeStaticModule } from '@nestjs/serve-static';
 
 import { CommonModule } from './common/common.module';
-import { SeedModule } from './seed/seed.module';
 import { join } from 'path';
 import { AuthModule } from './auth/auth.module';
 import { MessagesWsModule } from './messages-ws/messages-ws.module';
@@ -22,7 +21,6 @@ import { UsuariosModule } from './usuarios/usuarios.module';
       rootPath: join(__dirname, '..', 'public'),
     }),
     CommonModule,
-    SeedModule,
     AuthModule, 
     MessagesWsModule, 
     RepositoriosModule, 
