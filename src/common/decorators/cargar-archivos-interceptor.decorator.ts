@@ -28,8 +28,8 @@ export function CargarArchivos(fieldName: string, maxCount: number, fileSizeMB: 
     if(req.files)
     {
       const files = req.files as Express.Multer.File[];
-      urls=files.map(({path,originalname}) => {
-        return {url:path,nombre:originalname};      
+      urls=files.map(({path,originalname,filename}) => {
+        return {url:path,nombre:originalname,filename};      
       });
     }
 

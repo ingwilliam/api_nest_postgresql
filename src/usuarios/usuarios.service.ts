@@ -324,6 +324,25 @@ export class UsuariosService {
 
   }
 
+  async findObjUser(id: string, usuario: Usuario) {
+    try {
+
+      const usuariofind = await this.usuarioRepository.findOne({
+        where: { id }        
+      });
+
+      if (!usuariofind) {
+        throw new NotFoundException(`El usuario  no existe "${id}"`);
+      }
+
+      return usuariofind;
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService, usuario);
+    }
+
+  }
+
   async update(id: string, updateUsuarioDto: UpdateUsuarioDto, usuario: Usuario) {
     const { roles, password, ...userData } = updateUsuarioDto;
 

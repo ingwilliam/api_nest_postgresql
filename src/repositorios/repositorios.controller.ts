@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query, ParseUUIDPipe } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query, ParseUUIDPipe, Res, BadRequestException } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { RepositoriosService } from './repositorios.service';
@@ -10,6 +10,7 @@ import { CargarArchivos, PathArchivos } from '../common/decorators/cargar-archiv
 import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Usuario } from '../usuarios/entities';
+import { Response } from 'express';
 
 
 @ApiTags('Repositorios')
@@ -20,6 +21,18 @@ export class RepositoriosController {
     private readonly repositoriosService: RepositoriosService,
     private readonly cloudinaryService: CloudinaryService
   ) { }
+
+
+
+  @Get('view/:imageName')
+  findProductImage(
+    @Res() res:Response,
+    @Param('imageName') imageName:string
+  ){
+    const path=this.repositoriosService.getStaticProductImage(imageName);
+
+    res.sendFile(path);
+  }  
 
   @Post()
   @Auth(ValidRoles.admin)
@@ -37,8 +50,7 @@ export class RepositoriosController {
     }
     else
     {
-      console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"El registro no cuenta con archivos para cargar"});            
-      return;
+      throw new BadRequestException(`El registro no cuenta con archivos para cargar`);
     }
   }
 

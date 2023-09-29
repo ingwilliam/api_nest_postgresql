@@ -11,6 +11,8 @@ import { JwtPayload } from './interfaces/jwt-payload.interface';
 import { Rol, UsuarioRol, Usuario } from '../usuarios/entities';
 import { handleDBExceptions, sendEmailRegister, sendPasswordRegister } from '../common/helpers/class.helper';
 import {v4 as uuid} from 'uuid';
+import { RepositoriosService } from 'src/repositorios/repositorios.service';
+import { fileName } from '../common/helpers/files.helper';
 
 
 @Injectable()
@@ -26,6 +28,7 @@ export class AuthService {
     private readonly jwtService: JwtService,
     private readonly configService: ConfigService,
     private readonly dataSource: DataSource,
+    private readonly repositoriosService: RepositoriosService
   ) {
 
   }
@@ -235,8 +238,12 @@ export class AuthService {
 
       const {id,email,nombres,apellidos,activo}=usuario
 
+      const img = await this.repositoriosService.findImgPerfilUser(usuario)
+
+      const foto = (img)?`${this.configService.get('HOST_API')}/repositorios/view/${img}`:null
+
       return {
-        usuario:{id,email,nombres,apellidos,activo},
+        usuario:{id,email,nombres,apellidos,activo,foto},
         ...this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + ' ' + usuario.apellidos, id: usuario.id })
       };
 

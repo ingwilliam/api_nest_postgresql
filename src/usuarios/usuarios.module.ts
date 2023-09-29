@@ -13,6 +13,7 @@ import { PassportModule } from '@nestjs/passport';
       TypeOrmModule.forFeature([Usuario,UsuarioRol,Rol,Menu,MenuRol]),
       ConfigModule,
       PassportModule.register({defaultStrategy:'jwt'}),
-    ]
+    ],
+  exports: [UsuariosService],
 })
 export class UsuariosModule {}

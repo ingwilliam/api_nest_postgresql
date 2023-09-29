@@ -5,11 +5,15 @@ import { BeforeInsert, BeforeUpdate, Column, CreateDateColumn, Entity, ManyToOne
 @Entity('repositorios')
 export class Repositorio extends BaseEntity{
 
+
     @PrimaryGeneratedColumn('uuid')
     id: string;
 
     @Column('text')
     nombre: string;
+
+    @Column('text')
+    filename: string;
 
     @Column('text')
     repositorio: string;

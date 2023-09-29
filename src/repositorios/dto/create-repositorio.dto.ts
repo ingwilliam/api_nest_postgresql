@@ -1,4 +1,4 @@
-import { IsBoolean, IsIn, IsOptional, IsString, MinLength } from "class-validator";
+import { IsBoolean, IsIn, IsOptional, IsString, MinLength, IsUUID } from "class-validator";
 
 export class CreateRepositorioDto {
 
@@ -11,5 +11,7 @@ export class CreateRepositorioDto {
     @IsOptional()
     @IsBoolean()
     activo: boolean;
-    
+
+    @IsUUID('4', { message: 'El campo uuid debe ser un UUID válido' })    
+    usuario: string;
 }

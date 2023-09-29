@@ -8,6 +8,7 @@ import { AuthService } from './auth.service';
 import { AuthController } from './auth.controller';
 import { Rol, Usuario,UsuarioRol, } from '../usuarios/entities';
 import { JwtStrategy , GoogleStrategy , FacebookStrategy } from './strategies/';
+import { RepositoriosModule } from 'src/repositorios/repositorios.module';
 
 @Module({
   controllers: [AuthController],
@@ -32,7 +33,8 @@ import { JwtStrategy , GoogleStrategy , FacebookStrategy } from './strategies/';
             }
           }
       }
-    })    
+    }),
+    RepositoriosModule    
   ],
   exports:[
     TypeOrmModule,

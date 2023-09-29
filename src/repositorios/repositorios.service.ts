@@ -9,6 +9,10 @@ import { Repositorio } from './entities/repositorio.entity';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { handleDBExceptions } from '../common/helpers/class.helper';
 import { Usuario } from '../usuarios/entities/usuario.entity';
+import { join } from 'path';
+import { existsSync } from 'fs';
+import { UsuariosService } from 'src/usuarios/usuarios.service';
+
 
 @Injectable()
 export class RepositoriosService {
@@ -19,9 +23,18 @@ export class RepositoriosService {
     @InjectRepository(Repositorio)
     private readonly repositorioRepository: Repository<Repositorio>,
     private readonly dataSource: DataSource,
-    private readonly configService: ConfigService
+    private readonly configService: ConfigService,
+    private readonly usuarioService: UsuariosService
   ) {
 
+  }
+
+  getStaticProductImage(imageName:string){
+    const path =  join(__dirname, '../../static/repositorios',imageName);
+    if(!existsSync){
+      throw new BadRequestException(`No existe la imagen ${imageName}`);
+    }
+    return path;
   }
 
   async create(createRepositorioDto: CreateRepositorioDto, usuario: Usuario, urls?: string[]) {
@@ -31,12 +44,16 @@ export class RepositoriosService {
     await queryRunner.startTransaction();
 
     try {
+
+      const usuarioFind = await this.usuarioService.findObjUser(createRepositorioDto.usuario,usuario);
+
       const repositorios = await Promise.all(urls.map(async r => {
         const registro = await queryRunner.manager.save(Repositorio, {
           ...createRepositorioDto,
           nombre: r['nombre'],
+          filename: r['filename'],
           url: r['url'],
-          usuario,
+          usuario:usuarioFind,
         })
         return { ...registro, usuario: registro.usuario.nombres+' '+registro.usuario.apellidos };
       }));
@@ -111,9 +128,27 @@ export class RepositoriosService {
 
   }
 
+  async findImgPerfilUser(usuario: Usuario) {
+
+    try {
+
+      const repositorio = await this.repositorioRepository.findOne({
+        where: { usuario: { id: usuario.id },tipo:'PERFIL',repositorio:'Usuario' },
+        order: { createdAt: 'DESC' },
+      });
+      
+      return repositorio?.filename||null
+
+
+    } catch (error) {
+      handleDBExceptions(error, this.configService, usuario);
+    }
+
+  }
+
   async update(id: string, updateRepositorioDto: UpdateRepositorioDto, usuario: Usuario) {
 
-    const repositorio = await this.repositorioRepository.preload({ id, ...updateRepositorioDto });
+    const repositorio = await this.repositorioRepository.preload({ id });
 
     if (!repositorio) {
       throw new NotFoundException(`No existe el repositorio id: ${id}`);
