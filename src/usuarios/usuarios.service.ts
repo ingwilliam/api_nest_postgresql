@@ -10,6 +10,8 @@ import { ConfigService } from '@nestjs/config';
 import { Menu, MenuRol, Rol, UsuarioRol } from './entities';
 import { PaginationDto } from 'src/common/dto/pagination.dto';
 import { handleDBExceptions } from 'src/common/helpers/class.helper';
+import { ParamsDto } from 'src/common/dto';
+
 
 @Injectable()
 export class UsuariosService {
@@ -80,17 +82,19 @@ export class UsuariosService {
         .from(MenuRol)
         .execute();
 
-        const rolesHome = ['USER-INT','USER-EXT']
-        const rolesUsers = ['USER-EXT']
+        const rolesHomeInt = ['USER-INT']
+        const rolesHomeExt = ['USER-EXT']
+        const rolesUsers = ['ADMIN']
 
         const menuItem = [
           {
-            titulo: 'Home',
+            tipo: 'USER-EXT',
+            titulo: 'Home ',
             subTitulo: 'Home',
             icono: 'las la-home',
             link: 'index-admin',
             activo: true,
-            menuRoles: await Promise.all(rolesHome.map(async r => {
+            menuRoles: await Promise.all(rolesHomeExt.map(async r => {
               const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
               if (!rol) {
                 throw new BadRequestException(`El rol no existe ${r}`);
@@ -100,10 +104,27 @@ export class UsuariosService {
             })),
           },
           {
+            tipo: 'USER-INT',
+            titulo: 'Home',
+            subTitulo: 'Home',
+            icono: 'las la-home',
+            link: 'index-config',
+            activo: true,
+            menuRoles: await Promise.all(rolesHomeInt.map(async r => {
+              const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
+              if (!rol) {
+                throw new BadRequestException(`El rol no existe ${r}`);
+              }
+  
+              return queryRunner.manager.create(MenuRol, { rol,activo:true});
+            })),
+          },
+          {
+            tipo: 'USER-INT',
             titulo: 'Usuarios',
             subTitulo: 'Gestión de usuarios',
             icono: 'las la-users',
-            link: 'users-admin',
+            link: 'users',
             activo: true,
             menuRoles: await Promise.all(rolesUsers.map(async r => {
               const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
@@ -267,7 +288,7 @@ export class UsuariosService {
 
   }
 
-  async findMenus(usuario: Usuario) {
+  async findMenus(usuario: Usuario,params:ParamsDto) {
     try {
 
       const roles = []
@@ -276,8 +297,13 @@ export class UsuariosService {
       }
 
       const menu = await this.menuRolRepository.find({ 
-        where: { rol: In(roles) },
-        relations: ['menu'], // Cargar la relación "menu"
+        where: { 
+          rol: In(roles),
+          menu: {
+            tipo: params.menu,
+          },
+        },
+        relations: ['menu'],
       });
 
       const uniqueMenu = Array.from(new Set(menu.map(item => JSON.stringify(item.menu))))

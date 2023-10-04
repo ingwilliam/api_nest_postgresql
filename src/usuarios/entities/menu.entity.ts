@@ -8,6 +8,9 @@ export class Menu extends BaseEntity{
     @PrimaryGeneratedColumn('uuid')
     id:string;
 
+    @Column('text')
+    tipo:string;
+
     @Column('text', {
         unique: true,
     })

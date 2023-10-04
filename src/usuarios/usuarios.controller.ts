@@ -7,7 +7,7 @@ import { UpdateUsuarioDto } from './dto/update-usuario.dto';
 import { Auth, GetUsuario } from 'src/auth/decorators';
 import { Usuario } from './entities';
 import { ValidRoles } from 'src/auth/interfaces';
-import { PaginationDto } from 'src/common/dto/pagination.dto';
+import { PaginationDto , ParamsDto } from 'src/common/dto/';
 
 
 @ApiTags('Usuarios')
@@ -50,15 +50,17 @@ export class UsuariosController {
     return this.usuariosService.findRoles(usuario);
   }
 
-  @Get('/menus')
+  @Post('/menus')
   @ApiBearerAuth('JWT-auth')
   @Auth()
   findMenus(
-    @Query() paginationDto:PaginationDto,
+    @Query() params:ParamsDto,
     @GetUsuario() usuario:Usuario
   ) {
+    console.log(params);
+    
     console.log({usuario:usuario.email,context:UsuariosController.name,"description":"Ingresa a consultar todos los roles"});            
-    return this.usuariosService.findMenus(usuario);
+    return this.usuariosService.findMenus(usuario,params);
   }
 
 
