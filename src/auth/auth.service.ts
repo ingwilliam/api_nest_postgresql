@@ -37,7 +37,7 @@ export class AuthService {
 
     try {
 
-      const rol = await this.rolRepository.findOne({ where: { rol: 'USER' } });
+      const rol = await this.rolRepository.findOne({ where: { rol: 'USER-EXT' } });
 
       const { password, ...userData } = registroUsuarioDto;
 
@@ -157,7 +157,7 @@ export class AuthService {
   }
 
 
-  async createExterno(email: string, nombres: string, picture: string, autenticacion: string) {
+  async createExterno(email: string, nombres: string,apellidos: string, picture: string, autenticacion: string) {
 
     try {
 
@@ -172,11 +172,12 @@ export class AuthService {
 
         try {
 
-          const roles = ['USER']
+          const roles = ['USER-EXT']
           const userData: CreateUsuarioDto = {
             email,
             password: bcrypt.hashSync(this.configService.get('USER_PASSWORD_DEFAULT'), 10),
             nombres,
+            apellidos,
             activo: true,
             autenticacion
           };
@@ -217,8 +218,8 @@ export class AuthService {
       console.log({ "usuario": email, context: AuthService.name, "description": `Sale del login ${autenticacion}` });
 
       return {
-        ...usuario,
-        token: this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + +usuario.apellidos, id: usuario.id })
+        usuario,
+        ...this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + ' ' + usuario.apellidos, id: usuario.id })
       };
 
 

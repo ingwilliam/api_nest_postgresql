@@ -55,9 +55,9 @@ export class AuthController {
   @Get('google/callback')
   @UseGuards(AuthGuard('google'))
   async googleLoginCallback(@Req() req) {    
-    const {email,name,photo} = req.user;    
+    const {email,name,photo,nombres,apellidos} = req.user;    
     console.log({"usuario":email,context:AuthController.name,"description":"Ingresa a login google"});    
-    return await this.authService.createExterno(email,name,photo,'GOOGLE');
+    return await this.authService.createExterno(email,nombres,apellidos,photo,'GOOGLE');
   }
 
   @Get('facebook')
@@ -69,7 +69,7 @@ export class AuthController {
   async facebookLoginCallback(@Req() req) {    
     const {email,name,photo} = req.user;
     console.log({"usuario":email,context:AuthController.name,"description":"Ingresa a login FACEBOOK"});    
-    return await this.authService.createExterno(email,name,photo,'FACEBOOK');
+    return await this.authService.createExterno(email,'','',photo,'FACEBOOK');
   }
 
   

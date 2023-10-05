@@ -185,7 +185,7 @@ export class UsuariosService {
       try {
 
         if (!roles) {
-          roles = ['USER']
+          roles = ['USER-EXT']
         }
 
         const usuariocreate = queryRunner.manager.create(Usuario, {

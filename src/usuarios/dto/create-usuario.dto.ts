@@ -64,7 +64,7 @@ export class CreateUsuarioDto {
     @ApiProperty({
         description:'El usuario esta activo',        
         isArray:true,                
-        enum:['USER']
+        enum:['USER-EXT']
     })
     @IsString({ each: true })
     @IsArray()

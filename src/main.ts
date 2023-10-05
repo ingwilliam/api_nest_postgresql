@@ -15,7 +15,7 @@ async function bootstrap() {
   });
   const logger  = new Logger('Booststrap');
 
-  app.enableCors( optionsCors);
+  app.enableCors( optionsCors());
 
   app.setGlobalPrefix('api');
   app.enableVersioning({
