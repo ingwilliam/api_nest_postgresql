@@ -9,9 +9,9 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     private readonly configService: ConfigService
   ) {
     super({
-      clientID: 148468471631217,
-      clientSecret: "1df5b17428e15b51cadc185b4e7ec4aa",
-      callbackURL: `${configService.get('HOST_API')}/auth/facebook/callback`,
+      clientID: configService.get('FACEBOOK_CLIENT_ID'),
+      clientSecret: configService.get('FACEBOOK_SECRET_ID'),
+      callbackURL: `${configService.get('URL_APLICATION')}/login`,
       scope: 'email',profileFields: ['emails', 'name','picture.type(large)'],
     });
   }
@@ -23,9 +23,13 @@ export class FacebookStrategy extends PassportStrategy(Strategy, 'facebook') {
     done: (err: any, user: any, info?: any) => void,
   ): Promise<any> {
     const { name, emails , photos } = profile;
+    console.log(profile);
+    
     const user = {
       email: emails[0].value,
       name: name.givenName+" "+name.familyName,
+      nombres:name.givenName,
+      apellidos:name.familyName,
       photo:photos[0].value
     };
     const payload = {

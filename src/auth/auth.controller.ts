@@ -67,9 +67,9 @@ export class AuthController {
   @Get('facebook/callback')
   @UseGuards(AuthGuard('facebook'))
   async facebookLoginCallback(@Req() req) {    
-    const {email,name,photo} = req.user;
+    const {email,name,photo,nombres,apellidos} = req.user;
     console.log({"usuario":email,context:AuthController.name,"description":"Ingresa a login FACEBOOK"});    
-    return await this.authService.createExterno(email,'','',photo,'FACEBOOK');
+    return await this.authService.createExterno(email,nombres,apellidos,photo,'FACEBOOK');
   }
 
   
