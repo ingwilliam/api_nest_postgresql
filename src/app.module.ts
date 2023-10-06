@@ -11,6 +11,7 @@ import { ConexionDB } from './config/app.config';
 import { RepositoriosModule } from './repositorios/repositorios.module';
 import { CloudinaryModule } from './cloudinary/cloudinary.module';
 import { UsuariosModule } from './usuarios/usuarios.module';
+import { MinioModule } from './minio/minio.module';
 
 
 @Module({
@@ -25,7 +26,7 @@ import { UsuariosModule } from './usuarios/usuarios.module';
     MessagesWsModule, 
     RepositoriosModule, 
     CloudinaryModule, 
-    UsuariosModule,
+    UsuariosModule, MinioModule,
   ],
   controllers: [],
   providers: [],

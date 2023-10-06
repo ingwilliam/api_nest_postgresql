@@ -2,6 +2,9 @@
 /dist
 /node_modules
 /postgres-data
+/data-minio
+/config-minio
+/postgres-data
 /logs
 /static
 .env

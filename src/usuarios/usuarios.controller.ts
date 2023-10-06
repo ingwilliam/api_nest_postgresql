@@ -57,8 +57,6 @@ export class UsuariosController {
     @Query() params:ParamsDto,
     @GetUsuario() usuario:Usuario
   ) {
-    console.log(params);
-    
     console.log({usuario:usuario.email,context:UsuariosController.name,"description":"Ingresa a consultar todos los roles"});            
     return this.usuariosService.findMenus(usuario,params);
   }

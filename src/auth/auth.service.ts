@@ -161,9 +161,13 @@ export class AuthService {
 
     try {
 
-      let usuario = await this.usuarioRepository.findOne({ where: { email: email } });
+      let usuarioFind = await this.usuarioRepository.findOne({
+        where: { email },
+        select: { email: true, nombres: true, apellidos: true, password: true, activo: true, id: true },        
+        relations: ['usuarioRoles', 'usuarioRoles.rol']
+      });
 
-      if (!usuario) {
+      if (!usuarioFind) {
 
 
         const queryRunner = this.dataSource.createQueryRunner();
@@ -183,7 +187,7 @@ export class AuthService {
           };
 
 
-          usuario = queryRunner.manager.create(Usuario, {
+          usuarioFind = queryRunner.manager.create(Usuario, {
             ...userData,
             usuarioRoles: await Promise.all(roles.map(async r => {
               const rol = await queryRunner.manager.findOne(Rol, { where: { rol: r } });
@@ -195,7 +199,7 @@ export class AuthService {
             })),
           });
 
-          await queryRunner.manager.save(usuario);
+          await queryRunner.manager.save(usuarioFind);
           await queryRunner.commitTransaction();
           await queryRunner.release();
 
@@ -204,21 +208,34 @@ export class AuthService {
           await queryRunner.rollbackTransaction();
           await queryRunner.release();
 
-          handleDBExceptions(error, this.configService, usuario);
+          handleDBExceptions(error, this.configService, usuarioFind);
         }
 
 
       }
 
-      if (!usuario.activo) {
+      if (!usuarioFind.activo) {
         throw new UnauthorizedException('Hable con el administrador, usuario bloqueado')
       }
 
+      delete usuarioFind.password
+
+      const {usuarioRoles,...usuario} = usuarioFind
+
+      const tipoUsuario = usuarioRoles
+        .filter((usuario) => this.configService.get('TIPO_USUARIO').split(',').includes(usuario.rol.rol))
+        .map((usuario) => usuario.rol.rol);
+      
+
+      const img = await this.repositoriosService.findImgPerfilUser(usuarioFind)
+
+      const foto = (img)?`${this.configService.get('HOST_API')}/repositorios/view/${img}`:null
 
       console.log({ "usuario": email, context: AuthService.name, "description": `Sale del login ${autenticacion}` });
 
       return {
-        usuario,
+        usuario:{...usuario,foto},
+        tipoUsuario,
         ...this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + ' ' + usuario.apellidos, id: usuario.id })
       };
 
@@ -235,16 +252,21 @@ export class AuthService {
 
     try {
 
-      console.log({ usuario: usuario.email, context: AuthService.name, "description": "Ingresa al login" });
-
-      const {id,email,nombres,apellidos,activo}=usuario
+      const {id,email,nombres,apellidos,activo,usuarioRoles}=usuario
 
       const img = await this.repositoriosService.findImgPerfilUser(usuario)
 
       const foto = (img)?`${this.configService.get('HOST_API')}/repositorios/view/${img}`:null
 
+      const tipoUsuario = usuarioRoles
+        .filter((usuario) => this.configService.get('TIPO_USUARIO').split(',').includes(usuario.rol.rol))
+        .map((usuario) => usuario.rol.rol);
+
+      console.log({ usuario: usuario.email, context: AuthService.name, "description": "Sale del login" });
+
       return {
         usuario:{id,email,nombres,apellidos,activo,foto},
+        tipoUsuario,
         ...this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + ' ' + usuario.apellidos, id: usuario.id })
       };
 
@@ -260,30 +282,42 @@ export class AuthService {
     try {
       const { password, email } = loginUserDto;
 
-      const usuario = await this.usuarioRepository.findOne({
+      const usuarioFind = await this.usuarioRepository.findOne({
         where: { email },
         select: { email: true, nombres: true, apellidos: true, password: true, activo: true, id: true },        
-        //relations: ['usuarioRoles', 'usuarioRoles.rol']
+        relations: ['usuarioRoles', 'usuarioRoles.rol']
       });
 
-      if (!usuario) {
+      if (!usuarioFind) {
         throw new UnauthorizedException('Credenciales no son validas')
       }
 
-      if (!bcrypt.compareSync(password, usuario.password)) {
+      if (!bcrypt.compareSync(password, usuarioFind.password)) {
         throw new UnauthorizedException('Credenciales no son validas')
       }
 
-      if (!usuario.activo) {
-        throw new UnauthorizedException(`Su cuenta no esta activa. revise su bandeja de entrada del email ${usuario.email}, con el asunto (${this.configService.get('NAME_APLICATION')} - Activación de usuario) y active su cuenta`)
+      if (!usuarioFind.activo) {
+        throw new UnauthorizedException(`Su cuenta no esta activa. revise su bandeja de entrada del email ${usuarioFind.email}, con el asunto (${this.configService.get('NAME_APLICATION')} - Activación de usuario) y active su cuenta`)
       }
 
-      delete usuario.password
+      delete usuarioFind.password
+
+      const {usuarioRoles,...usuario} = usuarioFind
+
+      const tipoUsuario = usuarioRoles
+        .filter((usuario) => this.configService.get('TIPO_USUARIO').split(',').includes(usuario.rol.rol))
+        .map((usuario) => usuario.rol.rol);
       
+
+      const img = await this.repositoriosService.findImgPerfilUser(usuarioFind)
+
+      const foto = (img)?`${this.configService.get('HOST_API')}/repositorios/view/${img}`:null
+
       console.log({ loginUserDto, context: AuthService.name, "description": "Sale del login" });
 
       return {
-        usuario,
+        usuario:{...usuario,foto},
+        tipoUsuario,
         ...this.getJwtToken({ email: usuario.email, usuario: usuario.nombres + ' ' + usuario.apellidos, id: usuario.id })
       };
 

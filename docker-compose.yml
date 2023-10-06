@@ -36,3 +36,16 @@ services:
     ports:
       - "1080:1080"        
       - "1025:1025"        
+  minio:
+    image: minio/minio
+    container_name: minio-container
+    ports:
+      - "${MINIO_PORT}:9000"
+      - "${MINIO_CONSOLE_PORT}:9001"
+    environment:
+      MINIO_ROOT_USER: ingeniero.wb@gmail.com
+      MINIO_ROOT_PASSWORD: ${DB_PASSWORD}
+    volumes:
+      - ./data-minio:/data
+      - ./config-minio:/root/.minio
+    command: server --console-address ":9001" /data
