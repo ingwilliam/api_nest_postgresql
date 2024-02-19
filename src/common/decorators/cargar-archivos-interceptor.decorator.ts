@@ -1,6 +1,6 @@
 import { applyDecorators, createParamDecorator, ExecutionContext, UseInterceptors } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
-import { diskStorage } from 'multer';
+import { diskStorage, memoryStorage } from 'multer';
 import { fileName,fileFilter } from '../helpers/files.helper';
 
 export function CargarArchivos(fieldName: string, maxCount: number, fileSizeMB: number,destination?:string) {
@@ -10,10 +10,10 @@ export function CargarArchivos(fieldName: string, maxCount: number, fileSizeMB: 
           limits: {
             fileSize: fileSizeMB * 1024 * 1024,
           },
-          storage: diskStorage({
+          storage: destination ? diskStorage({ // Usar diskStorage si hay una carpeta de destino
             destination: destination,
             filename: fileName,
-          }),
+          }) : memoryStorage(),
           fileFilter: fileFilter,
         }),
       ),

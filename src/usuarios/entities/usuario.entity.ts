@@ -78,4 +78,10 @@ export class Usuario extends BaseEntity{
     checkFieldsBeforeUpdate(){
         this.email = this.email.toLocaleLowerCase().trim();
     }
+
+    @Column(
+        { type: 'text',
+         nullable: true }
+         )
+    primer_nombre:string;
 }

@@ -29,3 +29,12 @@ export const fileName = (req:Request,file:Express.Multer.File,callback:Function)
     callback(null,fileName);
 
 }
+
+export const nameUUID = (mimetype)=>{
+
+    const fileExtension = mimetype.split('/')[1];
+    const fileName = `${uuid()}.${fileExtension}`;
+
+    return fileName;
+
+}

@@ -7,6 +7,8 @@ import { ConfigModule } from '@nestjs/config';
 import { CloudinaryModule } from '../cloudinary/cloudinary.module';
 import { PassportModule } from '@nestjs/passport';
 import { UsuariosModule } from 'src/usuarios/usuarios.module';
+import { MinioModule } from 'src/minio/minio.module';
+import { CommonModule } from 'src/common/common.module';
 
 @Module({
   controllers: [RepositoriosController],
@@ -16,7 +18,9 @@ import { UsuariosModule } from 'src/usuarios/usuarios.module';
     ConfigModule,
     PassportModule.register({defaultStrategy:'jwt'}),
     CloudinaryModule,
-    UsuariosModule    
+    UsuariosModule, 
+    MinioModule,
+    CommonModule
   ],  
   exports: [RepositoriosService],
 })

@@ -1,4 +1,4 @@
-import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query, ParseUUIDPipe, Res, BadRequestException } from '@nestjs/common';
+import { Controller, Get, Post, Body, Patch, Param, Delete, UploadedFiles, Query, ParseUUIDPipe, Res, BadRequestException, UseInterceptors } from '@nestjs/common';
 import { ApiTags } from '@nestjs/swagger';
 
 import { RepositoriosService } from './repositorios.service';
@@ -11,6 +11,11 @@ import { CloudinaryService } from '../cloudinary/cloudinary.service';
 import { PaginationDto } from '../common/dto/pagination.dto';
 import { Usuario } from '../usuarios/entities';
 import { Response } from 'express';
+import { MinioService } from '../minio/minio.service';
+
+import { FilesInterceptor } from '@nestjs/platform-express';
+import { AxiosAdapter } from 'src/common/adapters/axios.adapter';
+import * as request from 'request';
 
 
 @ApiTags('Repositorios')
@@ -19,13 +24,31 @@ export class RepositoriosController {
 
   constructor(
     private readonly repositoriosService: RepositoriosService,
-    private readonly cloudinaryService: CloudinaryService
+    private readonly cloudinaryService: CloudinaryService,
+    private readonly minioService: MinioService,
+    private readonly http: AxiosAdapter,
   ) { }
 
 
 
+  
   @Get('view/:imageName')
-  findProductImage(
+  async imageMinio(
+    @Res() res:Response,
+    @Param('imageName') url:string
+  ){
+    const externalUrl=await this.minioService.getPublicUrl(url);
+    
+    res.header('Content-Type', 'application/octet-stream');
+    res.header('Content-Disposition', `inline; filename="${url}"`);
+
+    // Realiza una solicitud HTTP para obtener el archivo desde la URL externa y transmite directamente al cliente
+    request.get(externalUrl).pipe(res);
+
+  }
+
+  @Get('viewFolder/:imageName')
+  imageFolder(
     @Res() res:Response,
     @Param('imageName') imageName:string
   ){
@@ -43,6 +66,29 @@ export class RepositoriosController {
     @GetUsuario() usuario: Usuario,
     @PathArchivos() urls
   ) {
+    console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"Ingresa a crear el registro"});            
+    if(urls.length>0)
+    {
+      return this.repositoriosService.create(createRepositorioDto, usuario, urls);
+    }
+    else
+    {
+      throw new BadRequestException(`El registro no cuenta con archivos para cargar`);
+    }
+  }
+
+  @Post('/minio')
+  @Auth(ValidRoles.admin)
+  @CargarArchivos('files', 10, 15)
+  async createMinio(
+    @Body() createRepositorioDto: CreateRepositorioDto,
+    @UploadedFiles() files: Express.Multer.File[],
+    @GetUsuario() usuario: Usuario,  
+  ) {
+    const urls = await this.minioService.upload(files);
+
+    console.log({urls});
+    
     console.log({usuario:usuario.email,context:RepositoriosController.name,"description":"Ingresa a crear el registro"});            
     if(urls.length>0)
     {
@@ -74,6 +120,19 @@ export class RepositoriosController {
       return;
     }    
   }
+
+
+
+  // @Post('/minio')
+  // @Auth(ValidRoles.admin)
+  // @CargarArchivos('files', 10, 15)
+  // async createMinio(
+  //   @Body() createRepositorioDto: CreateRepositorioDto,
+  //   @UploadedFiles() files: Express.Multer.File[],
+  //   @GetUsuario() usuario: Usuario,    
+  // ) {
+  //   return this.minioService.uploadFile(files)     
+  // }
 
   @Get()
   @Auth()
